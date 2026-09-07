@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Recepcion - Veterinaria San Marcos</title>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+<body data-auth="true" data-role="recepcionista">
+    <header>
+        <img src="img/logo.png" alt="Logo Veterinaria San Marcos">
+        <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">Menu</button>
+        <nav class="menu-principal" aria-label="Navegacion principal">
+            <a href="index.html">Inicio</a>
+            <a href="nosotros.html">Nosotros</a>
+            <a href="servicios.html">Servicios</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="reserva.html">Mis Citas</a>
+            <a href="registro.html">Registro</a>
+            <a href="login.html">Iniciar Sesion</a>
+        </nav>
+    </header>
+    <main class="contenedor-tabla">
+        <section><h1>Gestion de Citas</h1>
+            <p>La recepcionista puede revisar las solicitudes, confirmarlas o proponer otro horario.</p>
+            <div id="lista-recepcion-citas">
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2026 Veterinaria San Marcos.</p>
+    </footer>    
+    <script src="js/sesion.js"></script>
+    <script src="js/citas.js"></script>
+</body>
+</html>

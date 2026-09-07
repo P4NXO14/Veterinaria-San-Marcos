@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Iniciar Sesion - Veterinaria San Marcos</title>
+        <link rel="stylesheet" href="css/styles.css">
+    </head>
+<body data-publica="true"><header>
+        <img src="img/logo.png" alt="Logo Veterinaria San Marcos">
+        <button type="button" class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">Menu</button>
+        <nav class="menu-principal" aria-label="Navegacion principal">
+            <a href="index.html">Inicio</a>
+            <a href="nosotros.html">Nosotros</a>
+            <a href="servicios.html">Servicios</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="reserva.html">Mis Citas</a>
+            <a href="registro.html">Registro</a>
+            <a href="login.html">Iniciar Sesion</a>
+        </nav>
+    </header>
+<main>
+    <section class="contenedor-formulario pequeño">
+        <h1>Iniciar Sesion</h1>
+        <p>Ingresa con una cuenta previamente registrada.</p>
+<form id="formLogin" class="formulario-vertical" novalidate>
+
+<label for="loginCorreo">Correo electronico:</label>
+
+<input type="email" id="loginCorreo" name="correo" maxlength="100" autocomplete="email" placeholder="nombre@correo.cl" required>
+
+<label for="loginPass">Contraseña:</label>
+
+<input type="password" id="loginPass" name="password" minlength="4" maxlength="10" autocomplete="current-password" required>
+
+<button type="submit" class="btn-principal">Ingresar</button>
+<p id="login-error" class="mensaje-formulario" aria-live="polite"></p>
+</form>
+
+<p class="ayuda-formulario">¿No tienes cuenta? <a href="registro.html">Registrate aqui</a>.</p>
+</section>
+</main>
+<footer>
+    <p>&copy; 2026 Veterinaria San Marcos.</p></footer>
+    <script src="js/sesion.js"></script>
+    <script src="js/validaciones.js"></script>
+</body>
+</html>
