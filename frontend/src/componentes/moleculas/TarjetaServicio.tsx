@@ -2,10 +2,11 @@ import { useState } from "react";
 import type { Servicio } from "../../datos/servicios";
 
 interface TarjetaServicioProps {
-  servicio: Servicio;
+    servicio: Servicio;
+    onSolicitarCita: (id: string) => void;
 }
 
-function TarjetaServicio({ servicio }: TarjetaServicioProps) {
+function TarjetaServicio({ servicio, onSolicitarCita }: TarjetaServicioProps) {
   const [mostrarDetalle, setMostrarDetalle] = useState(false);
 
   const precioFormateado = servicio.precio.toLocaleString("es-CL");
@@ -34,9 +35,9 @@ function TarjetaServicio({ servicio }: TarjetaServicioProps) {
         type="button"
         className="btn-detalle"
         aria-expanded={mostrarDetalle}
-        onClick={() => setMostrarDetalle(!mostrarDetalle)}
+        onClick={() => onSolicitarCita(servicio.id)}
       >
-        Ver detalle
+        Solicitar Cita
       </button>
 
       {mostrarDetalle && (

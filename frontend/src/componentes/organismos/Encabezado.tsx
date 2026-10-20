@@ -1,8 +1,14 @@
 import { useState } from "react";
 import Logo from "../atomos/Logo";
 import EnlaceNavegacion from "../atomos/EnlaceNavegacion";
+import type { Sesion } from "../../datos/usuarios";
 
-function Encabezado() {
+interface EncabezadoProps {
+  sesion: Sesion | null;
+  onCerrarSesion: () => void;
+}
+
+function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
   const [menuAbierto, setMenuAbierto] = useState(false);
 
   return (
@@ -15,7 +21,7 @@ function Encabezado() {
       <button
         type="button"
         className="btn btn-outline-light d-lg-none"
-        aria-label="Abrir menú"
+        aria-label="Abrir menu"
         aria-controls="menu-principal"
         aria-expanded={menuAbierto}
         onClick={() => setMenuAbierto(!menuAbierto)}
@@ -28,15 +34,36 @@ function Encabezado() {
         className={`${
           menuAbierto ? "d-flex" : "d-none"
         } d-lg-flex flex-column flex-lg-row gap-3`}
-        aria-label="Navegación principal"
+        aria-label="Navegacion principal"
       >
         <EnlaceNavegacion destino="/" texto="Inicio" />
         <EnlaceNavegacion destino="/nosotros" texto="Nosotros" />
         <EnlaceNavegacion destino="/servicios" texto="Servicios" />
         <EnlaceNavegacion destino="/contacto" texto="Contacto" />
         <EnlaceNavegacion destino="/reserva" texto="Mis Citas" />
-        <EnlaceNavegacion destino="/registro" texto="Registro" />
-        <EnlaceNavegacion destino="/login" texto="Iniciar Sesion" />
+        
+        {sesion ? (
+    <>
+        <span className="text-white">
+        Hola, {sesion.nombre}
+        </span>
+
+        <button
+        type="button"
+        className="btn btn-outline-light"
+        onClick={onCerrarSesion}
+        >
+        Cerrar Sesion
+        </button>
+    </>
+        ) : (
+        <>
+            <EnlaceNavegacion destino="/registro" texto="Registro" />
+            <EnlaceNavegacion destino="/login" texto="Iniciar Sesion" />
+        </>
+        )}
+
+
       </nav>
     </header>
   );

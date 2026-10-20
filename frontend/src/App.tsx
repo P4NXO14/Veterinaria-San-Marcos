@@ -1,6 +1,10 @@
-import { Routes, Route } from "react-router-dom";
+import { useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
+import type { Sesion } from "./datos/usuarios";
 import Encabezado from "./componentes/organismos/Encabezado";
 import Inicio from "./paginas/Inicio";
+import Login from "./paginas/Login";
+import Registro from "./paginas/Registro";
 
 interface VistaPendienteProps {
   titulo: string;
@@ -16,13 +20,40 @@ function VistaPendiente({ titulo }: VistaPendienteProps) {
 }
 
 function App() {
+  const navigate = useNavigate();
+
+  const [sesion, setSesion] = useState<Sesion | null>(() => {
+    const sesionGuardada = localStorage.getItem("sesionSanMarcos");
+
+    if (!sesionGuardada) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(sesionGuardada) as Sesion;
+    } catch {
+      return null;
+    }
+  });
+
+  function cerrarSesion() {
+    localStorage.removeItem("sesionSanMarcos");
+    setSesion(null);
+    navigate("/");
+  }
+
   return (
+
     <>
-      <Encabezado />
+      <Encabezado
+        sesion={sesion}
+        onCerrarSesion={cerrarSesion}
+      />
 
       <Routes>
         
-        <Route path="/" element={<Inicio />} />
+        <Route path="/" element={<Inicio />} 
+        />
       
         <Route
           path="/nosotros"
@@ -44,15 +75,14 @@ function App() {
           element={<VistaPendiente titulo="Mis Citas" />}
         />
 
-        <Route
-          path="/registro"
-          element={<VistaPendiente titulo="Registro" />}
+        <Route path="/registro" element={<Registro />} 
         />
 
         <Route
           path="/login"
-          element={<VistaPendiente titulo="Iniciar Sesion" />}
+          element={<Login onIniciarSesion={setSesion} />}
         />
+
       </Routes>
 
       <footer className="text-center py-3">
