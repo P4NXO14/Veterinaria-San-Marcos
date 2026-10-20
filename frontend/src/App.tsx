@@ -7,6 +7,7 @@ import Login from "./paginas/Login";
 import Registro from "./paginas/Registro";
 import Reserva from "./paginas/Reserva";
 import Recepcion from "./paginas/Recepcion";
+import Administracion from "./paginas/Administracion";
 
 interface VistaPendienteProps {
   titulo: string;
@@ -88,6 +89,11 @@ function App() {
         <Route
           path="/recepcion"
           element={<Recepcion sesion={sesion} />}
+        />
+
+        <Route
+          path="/admin"
+          element={<Administracion sesion={sesion} />}
         />
 
       </Routes>

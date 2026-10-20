@@ -19,7 +19,9 @@ export function validarCorreoPorRol(
   }
 
   if (rol === "recepcionista") {
-    return correoNormalizado === "personal@sanmarcos.com";
+  return (
+    /^[a-z0-9._%+-]+@sanmarcos\.com$/.test(correoNormalizado) &&
+    correoNormalizado !== "admin@sanmarcos.com");
   }
 
   return false;
