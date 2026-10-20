@@ -37,3 +37,44 @@ export function guardarUsuarios(usuarios: Usuario[]) {
     JSON.stringify(usuarios)
   );
 }
+
+export function inicializarUsuariosPrueba(): void {
+  const usuarios = obtenerUsuarios();
+
+  const usuariosPrueba: Usuario[] = [
+    {
+      rut: "900000014",
+      nombre: "Administrador",
+      apellidos: "San Marcos",
+      correo: "admin@sanmarcos.com",
+      direccion: "Veterinaria San Marcos",
+      password: "Admin123",
+      rol: "admin",
+      activo: true
+    },
+    {
+      rut: "900000022",
+      nombre: "Personal",
+      apellidos: "San Marcos",
+      correo: "personal@sanmarcos.com",
+      direccion: "Veterinaria San Marcos",
+      password: "Pers1234",
+      rol: "recepcionista",
+      activo: true
+    }
+  ];
+
+  usuariosPrueba.forEach((cuenta) => {
+    const existe = usuarios.some(
+      (usuario) =>
+        usuario.correo.toLowerCase() === cuenta.correo ||
+        usuario.rut === cuenta.rut
+    );
+
+    if (!existe) {
+      usuarios.push(cuenta);
+    }
+  });
+
+  guardarUsuarios(usuarios);
+}

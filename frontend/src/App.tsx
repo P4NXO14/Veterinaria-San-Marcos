@@ -6,6 +6,7 @@ import Inicio from "./paginas/Inicio";
 import Login from "./paginas/Login";
 import Registro from "./paginas/Registro";
 import Reserva from "./paginas/Reserva";
+import Recepcion from "./paginas/Recepcion";
 
 interface VistaPendienteProps {
   titulo: string;
@@ -82,6 +83,11 @@ function App() {
         <Route
           path="/login"
           element={<Login onIniciarSesion={setSesion} />}
+        />
+
+        <Route
+          path="/recepcion"
+          element={<Recepcion sesion={sesion} />}
         />
 
       </Routes>

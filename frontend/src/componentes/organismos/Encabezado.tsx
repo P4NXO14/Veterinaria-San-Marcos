@@ -44,6 +44,14 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
         
         {sesion ? (
     <>
+
+        {(sesion.rol === "recepcionista" || sesion.rol === "admin") && (
+          <EnlaceNavegacion
+            destino="/recepcion"
+            texto="Recepcion"
+          />
+        )}
+
         <span className="text-white">
         Hola, {sesion.nombre}
         </span>
