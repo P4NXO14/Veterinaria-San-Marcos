@@ -253,3 +253,49 @@ footer p {
 .ayuda-formulario {
     margin-top: 15px;
 }
+
+
+/* Contenedor de reservas */
+.contenedor-principal {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.seccion-separada {
+    margin-top: 30px;
+}
+
+/* Campos del formulario */
+.formulario-vertical select,
+.formulario-vertical textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+
+.formulario-vertical textarea {
+    resize: none;
+}
+
+/* Listado de citas */
+.cita-item {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+}
+
+.cita-item p {
+    margin: 6px 0;
+}
+
+.estado-cita {
+    font-weight: bold;
+}
+
+.reserva-vacia {
+    color: #c0392b;
+}

@@ -5,6 +5,7 @@ import Encabezado from "./componentes/organismos/Encabezado";
 import Inicio from "./paginas/Inicio";
 import Login from "./paginas/Login";
 import Registro from "./paginas/Registro";
+import Reserva from "./paginas/Reserva";
 
 interface VistaPendienteProps {
   titulo: string;
@@ -71,8 +72,8 @@ function App() {
         />
 
         <Route
-          path="/reserva"
-          element={<VistaPendiente titulo="Mis Citas" />}
+        path="/reserva"
+        element={<Reserva sesion={sesion} />}
         />
 
         <Route path="/registro" element={<Registro />} 
