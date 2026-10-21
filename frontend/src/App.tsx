@@ -10,6 +10,8 @@ import Recepcion from "./paginas/Recepcion";
 import Administracion from "./paginas/Administracion";
 import Nosotros from "./paginas/Nosotros";
 import Contacto from "./paginas/Contacto";
+import Farmacia from "./paginas/Farmacia";
+import InventarioFarmacia from "./paginas/InventarioFarmacia";
 
 interface VistaPendienteProps {
   titulo: string;
@@ -94,6 +96,15 @@ function App() {
         <Route
           path="/admin"
           element={<Administracion sesion={sesion} />}
+        />
+
+        <Route
+          path="/farmacia"
+          element={<Farmacia sesion={sesion} />}
+        />
+        <Route
+          path="/inventario-farmacia"
+          element={<InventarioFarmacia sesion={sesion} />}
         />
 
       </Routes>

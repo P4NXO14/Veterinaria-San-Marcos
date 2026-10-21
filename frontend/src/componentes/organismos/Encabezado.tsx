@@ -14,7 +14,7 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
   return (
     <header
       className="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3"
-      style={{ backgroundColor: "#2c3e50" }}
+      style={{ backgroundColor: "#113150" }}
     >
       <Logo />
 
@@ -41,8 +41,11 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
         <EnlaceNavegacion destino="/servicios" texto="Servicios" />
 
         {(!sesion || sesion.rol === "cliente") && (
-          <EnlaceNavegacion destino="/contacto" texto="Contacto"
-          />
+          <EnlaceNavegacion destino="/contacto" texto="Contacto" />
+        )}
+
+        {(!sesion || sesion.rol === "cliente") && (
+          <EnlaceNavegacion destino="/farmacia" texto="Farmacia" />
         )}
 
         {(!sesion || sesion.rol === "cliente") && (
@@ -53,17 +56,15 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
     <>
 
         {(sesion.rol === "recepcionista" || sesion.rol === "admin") && (
-          <EnlaceNavegacion
-            destino="/recepcion"
-            texto="Recepcion"
-          />
+          <EnlaceNavegacion destino="/recepcion" texto="Recepcion" />
+        )}
+
+        {(sesion?.rol === "admin" || sesion?.rol === "recepcionista") && (
+          <EnlaceNavegacion destino="/inventario-farmacia" texto="Inventario" />
         )}
 
         {sesion.rol === "admin" && (
-          <EnlaceNavegacion
-            destino="/admin"
-            texto="Administracion"
-          />
+          <EnlaceNavegacion destino="/admin" texto="Administracion" />
         )}
 
         <span className="text-white">
@@ -84,7 +85,6 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
             <EnlaceNavegacion destino="/login" texto="Iniciar Sesion" />
         </>
         )}
-
 
       </nav>
     </header>
