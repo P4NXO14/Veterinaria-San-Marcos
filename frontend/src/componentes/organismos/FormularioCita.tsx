@@ -2,23 +2,16 @@ import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
 import Input from "../atomos/Input";
+import SelectorHorario from "./SelectorHorario";
 import { servicios } from "../../datos/servicios";
+import { profesionales } from "../../datos/profesionales";
+import { obtenerHorasDisponibles } from "../../datos/horarios";
 import { crearCita } from "../../datos/citas";
 import type { Sesion } from "../../datos/usuarios";
 
 interface FormularioCitaProps {
   sesion: Sesion;
   onCitaCreada: () => void;
-}
-
-function obtenerFechaActual(): string {
-  const hoy = new Date();
-
-  const año = hoy.getFullYear();
-  const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-  const dia = String(hoy.getDate()).padStart(2, "0");
-
-  return `${año}-${mes}-${dia}`;
 }
 
 function FormularioCita({
@@ -30,6 +23,7 @@ function FormularioCita({
     () => sessionStorage.getItem("servicioCitaSanMarcos") || ""
   );
 
+  const [profesional, setProfesional] = useState("");
   const [mascota, setMascota] = useState("");
   const [especie, setEspecie] = useState("");
   const [motivo, setMotivo] = useState("");
@@ -43,9 +37,59 @@ function FormularioCita({
     sessionStorage.removeItem("servicioCitaSanMarcos");
   }, []);
 
+  const servicioSeleccionado = servicios.find(
+    (item) => item.id === servicio
+  );
+
+  const profesionalesPermitidos = profesionales.filter((item) => {
+    if (!servicioSeleccionado) {
+      return false;
+    }
+
+    if (item.tipo === "veterinario") {
+      return true;
+    }
+
+    return (
+      servicioSeleccionado.categoria === "Enfermeria" ||
+      servicioSeleccionado.categoria === "Apoyo clinico"
+    );
+  });
+
+  const horasDisponibles =
+    fecha && profesional && servicio
+      ? obtenerHorasDisponibles(fecha, profesional, servicio)
+      : [];
+
   function mostrarError(texto: string) {
     setMensaje(texto);
     setTipoMensaje("error");
+  }
+
+  function cambiarServicio(id: string) {
+    setServicio(id);
+    setProfesional("");
+    setFecha("");
+    setHora("");
+    setMensaje("");
+  }
+
+  function cambiarProfesional(id: string) {
+    setProfesional(id);
+    setFecha("");
+    setHora("");
+    setMensaje("");
+  }
+
+  function seleccionarFecha(nuevaFecha: string) {
+    setFecha(nuevaFecha);
+    setHora("");
+    setMensaje("");
+  }
+
+  function confirmarHora(nuevaHora: string) {
+    setHora(nuevaHora);
+    setMensaje("");
   }
 
   function enviarSolicitud(e: FormEvent<HTMLFormElement>) {
@@ -56,8 +100,16 @@ function FormularioCita({
       return;
     }
 
-    if (!servicio || !servicios.some((s) => s.id === servicio)) {
+    if (!servicioSeleccionado) {
       mostrarError("Selecciona un servicio veterinario.");
+      return;
+    }
+
+    if (
+      !profesional ||
+      !profesionalesPermitidos.some((item) => item.id === profesional)
+    ) {
+      mostrarError("Selecciona un profesional disponible para el servicio.");
       return;
     }
 
@@ -76,13 +128,27 @@ function FormularioCita({
       return;
     }
 
-    if (!fecha || fecha < obtenerFechaActual()) {
-      mostrarError("Selecciona una fecha valida.");
+    if (!fecha) {
+      mostrarError("Selecciona una fecha del calendario.");
       return;
     }
 
     if (!hora) {
-      mostrarError("Selecciona una hora.");
+      mostrarError("Debes seleccionar y confirmar una hora.");
+      return;
+    }
+
+    const disponibilidadActual = obtenerHorasDisponibles(
+      fecha,
+      profesional,
+      servicio
+    );
+
+    if (!disponibilidadActual.includes(hora)) {
+      setHora("");
+      mostrarError(
+        "La hora seleccionada ya no esta disponible. Selecciona otra."
+      );
       return;
     }
 
@@ -92,6 +158,7 @@ function FormularioCita({
       propietarioNombre:
         `${sesion.nombre} ${sesion.apellidos || ""}`.trim(),
       servicio: servicio,
+      profesional: profesional,
       mascota: mascota.trim(),
       especie: especie,
       motivo: motivo.trim(),
@@ -103,6 +170,7 @@ function FormularioCita({
     });
 
     setServicio("");
+    setProfesional("");
     setMascota("");
     setEspecie("");
     setMotivo("");
@@ -129,7 +197,7 @@ function FormularioCita({
       <select
         id="citaServicio"
         value={servicio}
-        onChange={(e) => setServicio(e.target.value)}
+        onChange={(e) => cambiarServicio(e.target.value)}
         required
       >
         <option value="">Seleccione un servicio</option>
@@ -141,7 +209,29 @@ function FormularioCita({
         ))}
       </select>
 
-      <label htmlFor="citaMascota">Nombre de la mascota:</label>
+      <label htmlFor="citaProfesional">
+        Profesional:
+      </label>
+
+      <select
+        id="citaProfesional"
+        value={profesional}
+        onChange={(e) => cambiarProfesional(e.target.value)}
+        disabled={!servicio}
+        required
+      >
+        <option value="">Seleccione un profesional</option>
+
+        {profesionalesPermitidos.map((item) => (
+          <option key={item.id} value={item.id}>
+            {item.nombre} - {item.especialidad}
+          </option>
+        ))}
+      </select>
+
+      <label htmlFor="citaMascota">
+        Nombre de la mascota:
+      </label>
 
       <Input
         id="citaMascota"
@@ -180,26 +270,16 @@ function FormularioCita({
         required
       />
 
-      <label htmlFor="citaFecha">Fecha solicitada:</label>
-
-      <Input
-        id="citaFecha"
-        type="date"
-        value={fecha}
-        min={obtenerFechaActual()}
-        onChange={(e) => setFecha(e.target.value)}
-        required
-      />
-
-      <label htmlFor="citaHora">Hora solicitada:</label>
-
-      <Input
-        id="citaHora"
-        type="time"
-        value={hora}
-        onChange={(e) => setHora(e.target.value)}
-        required
-      />
+      {servicio && profesional && (
+        <SelectorHorario
+          key={`${servicio}-${profesional}`}
+          fechaSeleccionada={fecha}
+          horaConfirmada={hora}
+          horasDisponibles={horasDisponibles}
+          onSeleccionarFecha={seleccionarFecha}
+          onConfirmarHora={confirmarHora}
+        />
+      )}
 
       <button type="submit" className="btn-principal">
         Enviar solicitud

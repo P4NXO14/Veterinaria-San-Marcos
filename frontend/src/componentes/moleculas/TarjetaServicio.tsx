@@ -2,8 +2,8 @@ import { useState } from "react";
 import type { Servicio } from "../../datos/servicios";
 
 interface TarjetaServicioProps {
-    servicio: Servicio;
-    onSolicitarCita: (id: string) => void;
+  servicio: Servicio;
+  onSolicitarCita: (id: string) => void;
 }
 
 function TarjetaServicio({ servicio, onSolicitarCita }: TarjetaServicioProps) {
@@ -35,9 +35,9 @@ function TarjetaServicio({ servicio, onSolicitarCita }: TarjetaServicioProps) {
         type="button"
         className="btn-detalle"
         aria-expanded={mostrarDetalle}
-        onClick={() => onSolicitarCita(servicio.id)}
+        onClick={() => setMostrarDetalle(!mostrarDetalle)}
       >
-        Solicitar Cita
+        Ver detalle
       </button>
 
       {mostrarDetalle && (
@@ -48,6 +48,14 @@ function TarjetaServicio({ servicio, onSolicitarCita }: TarjetaServicioProps) {
           <p><strong>Observaciones:</strong> {servicio.obs}</p>
         </div>
       )}
+
+      <button
+        type="button"
+        className="btn-agendar-cita"
+        onClick={() => onSolicitarCita(servicio.id)}
+      >
+        Solicitar Cita
+      </button>
     </article>
   );
 }

@@ -8,6 +8,8 @@ import Registro from "./paginas/Registro";
 import Reserva from "./paginas/Reserva";
 import Recepcion from "./paginas/Recepcion";
 import Administracion from "./paginas/Administracion";
+import Nosotros from "./paginas/Nosotros";
+import Contacto from "./paginas/Contacto";
 
 interface VistaPendienteProps {
   titulo: string;
@@ -58,9 +60,7 @@ function App() {
         <Route path="/" element={<Inicio />} 
         />
       
-        <Route
-          path="/nosotros"
-          element={<VistaPendiente titulo="Nosotros" />}
+        <Route path="/nosotros" element={<Nosotros />} 
         />
 
         <Route
@@ -70,7 +70,7 @@ function App() {
 
         <Route
           path="/contacto"
-          element={<VistaPendiente titulo="Contacto" />}
+          element={<Contacto sesion={sesion} />}
         />
 
         <Route

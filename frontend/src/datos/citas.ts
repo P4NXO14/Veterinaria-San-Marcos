@@ -1,8 +1,10 @@
+
 export interface Cita {
   id: string;
   propietario: string;
   propietarioNombre: string;
   servicio: string;
+  profesional?: string;
   mascota: string;
   especie: string;
   motivo: string;
@@ -47,9 +49,18 @@ export function crearCita(cita: Cita): void {
 export function confirmarCita(id: string): boolean {
   const citas = obtenerCitas();
 
-  const cita = citas.find((item) => item.id === id);
+  const cita = citas.find(
+    (item) => item.id === id
+  );
 
   if (!cita) {
+    return false;
+  }
+
+  if (
+    cita.estado === "Cancelada" ||
+    cita.estado === "Rechazada"
+  ) {
     return false;
   }
 
@@ -67,9 +78,18 @@ export function proponerHorarioCita(
 ): boolean {
   const citas = obtenerCitas();
 
-  const cita = citas.find((item) => item.id === id);
+  const cita = citas.find(
+    (item) => item.id === id
+  );
 
   if (!cita || !fecha || !hora) {
+    return false;
+  }
+
+  if (
+    cita.estado === "Cancelada" ||
+    cita.estado === "Rechazada"
+  ) {
     return false;
   }
 
@@ -78,6 +98,53 @@ export function proponerHorarioCita(
   cita.horaPropuesta = hora;
 
   guardarCitas(citas);
+
+  return true;
+}
+
+export function cancelarCita(id: string): boolean {
+  const citas = obtenerCitas();
+
+  const cita = citas.find(
+    (item) => item.id === id
+  );
+
+  if (!cita) {
+    return false;
+  }
+
+  if (
+    cita.estado === "Cancelada" ||
+    cita.estado === "Rechazada"
+  ) {
+    return false;
+  }
+
+  cita.estado = "Cancelada";
+  cita.fechaPropuesta = "";
+  cita.horaPropuesta = "";
+
+  guardarCitas(citas);
+
+  return true;
+}
+
+export function eliminarCitaCancelada(id: string): boolean {
+  const citas = obtenerCitas();
+
+  const cita = citas.find(
+    (item) => item.id === id
+  );
+
+  if (!cita || cita.estado !== "Cancelada") {
+    return false;
+  }
+
+  const citasActualizadas = citas.filter(
+    (item) => item.id !== id
+  );
+
+  guardarCitas(citasActualizadas);
 
   return true;
 }

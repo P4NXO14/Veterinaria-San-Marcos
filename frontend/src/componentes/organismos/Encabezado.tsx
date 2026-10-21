@@ -39,7 +39,11 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
         <EnlaceNavegacion destino="/" texto="Inicio" />
         <EnlaceNavegacion destino="/nosotros" texto="Nosotros" />
         <EnlaceNavegacion destino="/servicios" texto="Servicios" />
-        <EnlaceNavegacion destino="/contacto" texto="Contacto" />
+
+        {(!sesion || sesion.rol === "cliente") && (
+          <EnlaceNavegacion destino="/contacto" texto="Contacto"
+          />
+        )}
 
         {(!sesion || sesion.rol === "cliente") && (
           <EnlaceNavegacion destino="/reserva" texto="Mis Citas" />

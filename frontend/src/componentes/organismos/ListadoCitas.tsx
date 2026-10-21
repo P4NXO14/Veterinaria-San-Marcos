@@ -1,5 +1,6 @@
 import type { Cita } from "../../datos/citas";
 import { servicios } from "../../datos/servicios";
+import { obtenerDescripcionProfesional } from "../../datos/profesionales";
 
 interface ListadoCitasProps {
   citas: Cita[];
@@ -29,6 +30,10 @@ function ListadoCitas({ citas }: ListadoCitasProps) {
             <h3>
               {servicio ? servicio.nombre : cita.servicio}
             </h3>
+            <p>
+              <strong>Profesional:</strong>{" "}
+              {obtenerDescripcionProfesional(cita.profesional)}
+            </p>
 
             <p>
               <strong>Mascota:</strong> {cita.mascota} ({cita.especie})

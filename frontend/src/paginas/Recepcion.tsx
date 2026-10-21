@@ -1,35 +1,37 @@
+
 import { useState } from "react";
 
 import {
   obtenerCitas,
   confirmarCita,
-  proponerHorarioCita
+  proponerHorarioCita,
+  cancelarCita,
+  eliminarCitaCancelada
 } from "../datos/citas";
 
 import type { Cita } from "../datos/citas";
 import type { Sesion } from "../datos/usuarios";
+
+import { obtenerDescripcionProfesional } from "../datos/profesionales";
+import { obtenerHorasDisponibles } from "../datos/horarios";
+
+import SelectorHorario from "../componentes/organismos/SelectorHorario";
+import MensajesContacto from "../componentes/organismos/MensajesContacto";
 
 interface RecepcionProps {
   sesion: Sesion | null;
 }
 
 function Recepcion({ sesion }: RecepcionProps) {
-  const [citas, setCitas] = useState<Cita[]>(() => obtenerCitas());
+
+  const [citas, setCitas] = useState<Cita[]>(
+    () => obtenerCitas()
+  );
 
   const [idEditando, setIdEditando] = useState<string | null>(null);
   const [fechaPropuesta, setFechaPropuesta] = useState("");
   const [horaPropuesta, setHoraPropuesta] = useState("");
   const [mensaje, setMensaje] = useState("");
-
-  function fechaActual(): string {
-    const hoy = new Date();
-
-    const año = hoy.getFullYear();
-    const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-    const dia = String(hoy.getDate()).padStart(2, "0");
-
-    return `${año}-${mes}-${dia}`;
-  }
 
   function actualizarListado() {
     setCitas(obtenerCitas());
@@ -53,14 +55,65 @@ function Recepcion({ sesion }: RecepcionProps) {
     setMensaje("");
   }
 
+  function seleccionarFecha(nuevaFecha: string) {
+    setFechaPropuesta(nuevaFecha);
+    setHoraPropuesta("");
+    setMensaje("");
+  }
+
+  function confirmarHora(nuevaHora: string) {
+    setHoraPropuesta(nuevaHora);
+    setMensaje("");
+  }
+
+  function cancelarPropuesta() {
+    setIdEditando(null);
+    setFechaPropuesta("");
+    setHoraPropuesta("");
+    setMensaje("");
+  }
+
   function guardarPropuesta(id: string) {
-    if (!fechaPropuesta || !horaPropuesta) {
-      setMensaje("Debes seleccionar una fecha y una hora.");
+    const citasActuales = obtenerCitas();
+
+    const cita = citasActuales.find(
+      (item) => item.id === id
+    );
+
+    if (!cita || !cita.profesional) {
+      setMensaje("La cita no tiene un profesional asignado.");
       return;
     }
 
-    if (fechaPropuesta < fechaActual()) {
-      setMensaje("La fecha propuesta no puede ser anterior a hoy.");
+    if (!fechaPropuesta || !horaPropuesta) {
+      setMensaje("Debes seleccionar y confirmar una hora disponible.");
+      return;
+    }
+
+    if (
+      fechaPropuesta === cita.fecha &&
+      horaPropuesta === cita.hora
+    ) {
+      setMensaje("Debes proponer un horario diferente al solicitado.");
+      return;
+    }
+
+    const otrasCitas = citasActuales.filter(
+      (item) => item.id !== id
+    );
+
+    const horasDisponibles = obtenerHorasDisponibles(
+      fechaPropuesta,
+      cita.profesional,
+      cita.servicio,
+      otrasCitas
+    );
+
+    if (!horasDisponibles.includes(horaPropuesta)) {
+      setHoraPropuesta("");
+      setMensaje(
+        "El horario seleccionado ya no esta disponible. Selecciona otra hora."
+      );
       return;
     }
 
@@ -81,7 +134,64 @@ function Recepcion({ sesion }: RecepcionProps) {
     }
   }
 
-  if (!sesion || (sesion.rol !== "recepcionista" && sesion.rol !=="admin")) {
+  function cancelar(id: string) {
+    const confirmarCancelacion = window.confirm(
+      "¿Estas seguro de que deseas cancelar esta cita? El horario quedara disponible."
+    );
+
+    if (!confirmarCancelacion) {
+      return;
+    }
+
+    const resultado = cancelarCita(id);
+
+    if (resultado) {
+      actualizarListado();
+
+      if (idEditando === id) {
+        setIdEditando(null);
+        setFechaPropuesta("");
+        setHoraPropuesta("");
+      }
+
+      setMensaje(
+        "Cita cancelada correctamente. El horario esta disponible."
+      );
+    } else {
+      setMensaje("No se pudo cancelar la cita.");
+    }
+  }
+
+  function eliminarCancelada(id: string) {
+    const confirmarEliminacion = window.confirm(
+      "¿Estas seguro de que deseas eliminar definitivamente esta cita cancelada?"
+    );
+
+    if (!confirmarEliminacion) {
+      return;
+    }
+
+    const resultado = eliminarCitaCancelada(id);
+
+    if (resultado) {
+      actualizarListado();
+
+      if (idEditando === id) {
+        setIdEditando(null);
+        setFechaPropuesta("");
+        setHoraPropuesta("");
+      }
+
+      setMensaje("Cita cancelada eliminada correctamente.");
+    } else {
+      setMensaje("Solo puedes eliminar citas canceladas.");
+    }
+  }
+
+  if (
+    !sesion ||
+    (sesion.rol !== "recepcionista" && sesion.rol !== "admin")
+  ) {
     return (
       <main className="contenedor-principal">
         <h1>Acceso restringido</h1>
@@ -92,12 +202,13 @@ function Recepcion({ sesion }: RecepcionProps) {
 
   return (
     <main className="contenedor-tabla">
+
       <section>
         <h1>Gestion de Citas</h1>
 
         <p>
           La recepcionista puede revisar las solicitudes,
-          confirmarlas o proponer otro horario.
+          confirmarlas, proponer otro horario o cancelar citas.
         </p>
 
         {mensaje && (
@@ -107,11 +218,17 @@ function Recepcion({ sesion }: RecepcionProps) {
         )}
 
         <div id="lista-recepcion-citas">
+
           {citas.length === 0 ? (
             <p>No existen solicitudes registradas.</p>
           ) : (
             citas.map((cita) => (
-              <article className="cita-item" key={cita.id}>
+
+              <article
+                className="cita-item"
+                key={cita.id}
+              >
+
                 <h3>
                   {cita.servicio} - {cita.mascota}
                 </h3>
@@ -119,6 +236,11 @@ function Recepcion({ sesion }: RecepcionProps) {
                 <p>
                   <strong>Dueño:</strong>{" "}
                   {cita.propietarioNombre} ({cita.propietario})
+                </p>
+
+                <p>
+                  <strong>Profesional asignado:</strong>{" "}
+                  {obtenerDescripcionProfesional(cita.profesional)}
                 </p>
 
                 <p>
@@ -142,79 +264,139 @@ function Recepcion({ sesion }: RecepcionProps) {
                 )}
 
                 <div className="acciones-cita">
-                  <button
-                    type="button"
-                    className="btn-principal"
-                    onClick={() => confirmar(cita.id)}
-                  >
-                    Confirmar
-                  </button>
 
-                  <button
-                    type="button"
-                    className="btn-secundario"
-                    onClick={() => abrirPropuesta(cita.id)}
-                  >
-                    Proponer otro horario
-                  </button>
-                </div>
+                  {cita.estado === "Cancelada" ? (
 
-                {idEditando === cita.id && (
-                  <div className="formulario-propuesta">
-                    <label htmlFor={`fecha-${cita.id}`}>
-                      Nueva fecha:
-                    </label>
+                    <button
+                      type="button"
+                      className="btn btn-danger"
+                      onClick={() => eliminarCancelada(cita.id)}
+                    >
+                      Eliminar cita
+                    </button>
 
-                    <input
-                      id={`fecha-${cita.id}`}
-                      type="date"
-                      min={fechaActual()}
-                      value={fechaPropuesta}
-                      onChange={(e) =>
-                        setFechaPropuesta(e.target.value)
-                      }
-                    />
+                  ) : cita.estado === "Rechazada" ? (
 
-                    <label htmlFor={`hora-${cita.id}`}>
-                      Nueva hora:
-                    </label>
+                    <span>
+                      Cita rechazada
+                    </span>
 
-                    <input
-                      id={`hora-${cita.id}`}
-                      type="time"
-                      value={horaPropuesta}
-                      onChange={(e) =>
-                        setHoraPropuesta(e.target.value)
-                      }
-                    />
+                  ) : (
 
-                    <div className="acciones-cita">
+                    <>
                       <button
                         type="button"
                         className="btn-principal"
-                        onClick={() => guardarPropuesta(cita.id)}
+                        onClick={() => confirmar(cita.id)}
                       >
-                        Guardar propuesta
+                        Confirmar
                       </button>
 
                       <button
                         type="button"
                         className="btn-secundario"
-                        onClick={() => {
-                          setIdEditando(null);
-                          setMensaje("");
-                        }}
+                        onClick={() => abrirPropuesta(cita.id)}
                       >
-                        Cancelar
+                        Proponer otro horario
                       </button>
-                    </div>
+
+                      <button
+                        type="button"
+                        className="btn btn-warning"
+                        onClick={() => cancelar(cita.id)}
+                      >
+                        Cancelar cita
+                      </button>
+                    </>
+
+                  )}
+
+                </div>
+
+                {idEditando === cita.id &&
+                  cita.estado !== "Cancelada" &&
+                  cita.estado !== "Rechazada" && (
+
+                  <div className="formulario-propuesta">
+
+                    {cita.profesional ? (
+                      <>
+
+                        <SelectorHorario
+                          key={cita.id}
+                          fechaSeleccionada={fechaPropuesta}
+                          horaConfirmada={horaPropuesta}
+                          horasDisponibles={
+                            fechaPropuesta
+                              ? obtenerHorasDisponibles(
+                                  fechaPropuesta,
+                                  cita.profesional,
+                                  cita.servicio,
+                                  obtenerCitas().filter(
+                                    (item) => item.id !== cita.id
+                                  )
+                                )
+                              : []
+                          }
+                          onSeleccionarFecha={seleccionarFecha}
+                          onConfirmarHora={confirmarHora}
+                        />
+
+                        <div className="acciones-cita">
+
+                          <button
+                            type="button"
+                            className="btn-principal"
+                            disabled={!fechaPropuesta || !horaPropuesta}
+                            onClick={() => guardarPropuesta(cita.id)}
+                          >
+                            Guardar propuesta
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn-secundario"
+                            onClick={cancelarPropuesta}
+                          >
+                            Cancelar
+                          </button>
+
+                        </div>
+
+                      </>
+                    ) : (
+
+                      <>
+                        <p>
+                          Esta cita no tiene un profesional asignado.
+                          Debes asignar uno antes de proponer otro horario.
+                        </p>
+
+                        <button
+                          type="button"
+                          className="btn-secundario"
+                          onClick={cancelarPropuesta}
+                        >
+                          Cerrar
+                        </button>
+                      </>
+
+                    )}
+
                   </div>
+
                 )}
+
               </article>
+
             ))
           )}
+
         </div>
       </section>
+
+      <MensajesContacto />
+
     </main>
   );
 }
