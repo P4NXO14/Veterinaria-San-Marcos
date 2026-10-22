@@ -1,0 +1,47 @@
+.servicios-filtros {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 16px;
+}
+
+.servicios-filtro {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.servicios-filtro label {
+    margin: 0;
+    line-height: 24px;
+}
+
+.servicios-filtro input,
+.servicios-filtro select {
+    width: 100%;
+    height: 50px;
+    min-height: 50px;
+    margin: 0;
+    padding: 0 14px;
+    box-sizing: border-box;
+}
+
+.servicios-limpiar {
+    height: 50px;
+    min-height: 50px;
+    margin: 0;
+    padding: 0 18px;
+}
+
+/* Adaptacion a pantallas pequeñas */
+
+@media (max-width: 768px) {
+    .servicios-filtros {
+        grid-template-columns: 1fr;
+    }
+
+    .servicios-limpiar {
+        width: 100%;
+    }
+}

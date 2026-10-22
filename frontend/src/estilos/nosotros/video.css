@@ -1,0 +1,20 @@
+.video-veterinaria {
+    margin-top: 30px;
+}
+
+.video-responsive {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    margin-top: 15px;
+}
+
+.video-responsive video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: 8px;
+}

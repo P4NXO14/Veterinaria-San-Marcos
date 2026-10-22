@@ -1,6 +1,9 @@
+
 import { useState } from "react";
+
 import Logo from "../atomos/Logo";
 import EnlaceNavegacion from "../atomos/EnlaceNavegacion";
+
 import type { Sesion } from "../../datos/usuarios";
 
 interface EncabezadoProps {
@@ -8,8 +11,30 @@ interface EncabezadoProps {
   onCerrarSesion: () => void;
 }
 
-function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
+function Encabezado({
+  sesion,
+  onCerrarSesion
+}: EncabezadoProps) {
   const [menuAbierto, setMenuAbierto] = useState(false);
+
+  const esCliente = sesion?.rol === "cliente";
+
+  const esPersonal =
+    sesion?.rol === "recepcionista" ||
+    sesion?.rol === "admin";
+
+  const esAdministrador = sesion?.rol === "admin";
+
+  const puedeVerCatalogos = !sesion || esCliente;
+
+  function cerrarMenu() {
+    setMenuAbierto(false);
+  }
+
+  function cerrarSesion() {
+    cerrarMenu();
+    onCerrarSesion();
+  }
 
   return (
     <header
@@ -35,57 +60,87 @@ function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
           menuAbierto ? "d-flex" : "d-none"
         } d-lg-flex flex-column flex-lg-row gap-3`}
         aria-label="Navegacion principal"
+        onClick={cerrarMenu}
       >
         <EnlaceNavegacion destino="/" texto="Inicio" />
-        <EnlaceNavegacion destino="/nosotros" texto="Nosotros" />
-        <EnlaceNavegacion destino="/servicios" texto="Servicios" />
 
-        {(!sesion || sesion.rol === "cliente") && (
-          <EnlaceNavegacion destino="/contacto" texto="Contacto" />
+        <EnlaceNavegacion
+          destino="/nosotros"
+          texto="Nosotros"
+        />
+
+        {puedeVerCatalogos && (
+          <>
+            <EnlaceNavegacion
+              destino="/servicios"
+              texto="Servicios"
+            />
+
+            <EnlaceNavegacion
+              destino="/farmacia"
+              texto="Farmacia"
+            />
+
+            <EnlaceNavegacion
+              destino="/contacto"
+              texto="Contacto"
+            />
+
+            <EnlaceNavegacion
+              destino="/reserva"
+              texto="Mis Citas"
+            />
+          </>
         )}
 
-        {(!sesion || sesion.rol === "cliente") && (
-          <EnlaceNavegacion destino="/farmacia" texto="Farmacia" />
+        {esPersonal && (
+          <>
+            <EnlaceNavegacion
+              destino="/recepcion"
+              texto="Recepcion"
+            />
+
+            <EnlaceNavegacion
+              destino="/inventario-farmacia"
+              texto="Inventario"
+            />
+          </>
         )}
 
-        {(!sesion || sesion.rol === "cliente") && (
-          <EnlaceNavegacion destino="/reserva" texto="Mis Citas" />
+        {esAdministrador && (
+          <EnlaceNavegacion
+            destino="/admin"
+            texto="Administracion"
+          />
         )}
-        
+
         {sesion ? (
-    <>
+          <>
+            <span className="text-white">
+              Hola, {sesion.nombre}
+            </span>
 
-        {(sesion.rol === "recepcionista" || sesion.rol === "admin") && (
-          <EnlaceNavegacion destino="/recepcion" texto="Recepcion" />
-        )}
-
-        {(sesion?.rol === "admin" || sesion?.rol === "recepcionista") && (
-          <EnlaceNavegacion destino="/inventario-farmacia" texto="Inventario" />
-        )}
-
-        {sesion.rol === "admin" && (
-          <EnlaceNavegacion destino="/admin" texto="Administracion" />
-        )}
-
-        <span className="text-white">
-        Hola, {sesion.nombre}
-        </span>
-
-        <button
-        type="button"
-        className="btn btn-outline-light"
-        onClick={onCerrarSesion}
-        >
-        Cerrar Sesion
-        </button>
-    </>
+            <button
+              type="button"
+              className="btn btn-outline-light"
+              onClick={cerrarSesion}
+            >
+              Cerrar Sesion
+            </button>
+          </>
         ) : (
-        <>
-            <EnlaceNavegacion destino="/registro" texto="Registro" />
-            <EnlaceNavegacion destino="/login" texto="Iniciar Sesion" />
-        </>
-        )}
+          <>
+            <EnlaceNavegacion
+              destino="/registro"
+              texto="Registro"
+            />
 
+            <EnlaceNavegacion
+              destino="/login"
+              texto="Iniciar Sesion"
+            />
+          </>
+        )}
       </nav>
     </header>
   );

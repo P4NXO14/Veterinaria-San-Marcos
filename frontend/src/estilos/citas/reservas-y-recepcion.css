@@ -1,0 +1,98 @@
+.contenedor-principal {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.seccion-separada {
+    margin-top: 30px;
+}
+
+/* Campos del formulario */
+
+.formulario-vertical select,
+.formulario-vertical textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+
+.formulario-vertical textarea {
+    resize: none;
+}
+
+/* Listado de citas */
+
+.cita-item {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 12px 0;
+}
+
+.cita-item p {
+    margin: 6px 0;
+}
+
+.estado-cita {
+    font-weight: bold;
+}
+
+.reserva-vacia {
+    color: #c0392b;
+}
+
+/* Gestion de citas */
+
+.contenedor-tabla {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.acciones-cita {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.btn-secundario {
+    padding: 10px;
+    background-color: #7f8c8d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-secundario:hover {
+    background-color: #626e70;
+}
+
+.formulario-propuesta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+}
+
+.formulario-propuesta input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+
+@media (max-width: 767px) {
+    .acciones-cita {
+        flex-direction: column;
+    }
+}

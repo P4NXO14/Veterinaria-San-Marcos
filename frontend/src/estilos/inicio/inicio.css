@@ -1,0 +1,27 @@
+.hero {
+    text-align: center;
+    padding: 50px 20px 30px 20px;
+    background-color: #f9f9f9;
+    border-bottom: 1px solid #eaeaea;
+    margin-bottom: 30px;
+}
+
+.hero h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.destacados h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
+}
+
+.texto-centrado {
+    text-align: center;
+}
+
+.enlace-destacado {
+    color: #117864;
+    font-weight: bold;
+}

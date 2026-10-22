@@ -71,26 +71,34 @@ function Farmacia({ sesion }: FarmaciaProps) {
   );
 
   function agregarAlCarrito(producto: ProductoFarmacia) {
+
     if (!sesion) {
-      localStorage.setItem(
-        "destinoSanMarcos",
-        "/farmacia"
+      const confirmar = window.confirm(
+        "Debes iniciar sesion o registrarte para agregar productos al carrito ¿Deseas ir a iniciar sesion?"
       );
 
-      navigate("/login");
+      if (confirmar) {
+        localStorage.setItem(
+          "destinoSanMarcos",
+          "/farmacia"
+        );
+
+        navigate("/login");
+      }
+
       return;
     }
 
     if (sesion.rol !== "cliente") {
       setMensaje(
-        "Solo los clientes pueden realizar compras de prueba"
+        "Solo los clientes pueden realizar compras de prueba."
       );
       return;
     }
 
     if (producto.requiereReceta) {
       setMensaje(
-        "Este producto requiere validacion de receta"
+        "Este producto requiere validacion de receta."
       );
       return;
     }
@@ -101,7 +109,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
 
     if (cantidadActual >= producto.stock) {
       setMensaje(
-        "No hay mas unidades disponibles de este producto"
+        "No hay mas unidades disponibles de este producto."
       );
       return;
     }
@@ -128,7 +136,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
     }
 
     setMensaje(
-      `${producto.nombre} agregado al carrito`
+      `${producto.nombre} agregado al carrito.`
     );
   }
 
@@ -140,10 +148,12 @@ function Farmacia({ sesion }: FarmaciaProps) {
         }
 
         if (item.cantidad > 1) {
-          return [{
-            ...item,
-            cantidad: item.cantidad - 1
-          }];
+          return [
+            {
+              ...item,
+              cantidad: item.cantidad - 1
+            }
+          ];
         }
 
         return [];
@@ -156,7 +166,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
   function confirmarCompra() {
     if (!sesion || sesion.rol !== "cliente") {
       setMensaje(
-        "Debes iniciar sesion como cliente"
+        "Debes iniciar sesion como cliente."
       );
       return;
     }
@@ -165,6 +175,8 @@ function Farmacia({ sesion }: FarmaciaProps) {
       setMensaje("El carrito esta vacio.");
       return;
     }
+
+    // Consultar nuevamente el inventario guardado
 
     const inventarioActual = obtenerProductosFarmacia();
 
@@ -190,6 +202,8 @@ function Farmacia({ sesion }: FarmaciaProps) {
       return;
     }
 
+    // Confirmar la compra simulada
+
     const aceptada = window.confirm(
       "¿Confirmas esta compra de prueba? Se descontara stock, pero no se realizara ningun pago"
     );
@@ -197,6 +211,8 @@ function Farmacia({ sesion }: FarmaciaProps) {
     if (!aceptada) {
       return;
     }
+
+    // Descontar las unidades compradas del inventario
 
     const inventarioActualizado = inventarioActual.map(
       (producto) => {
@@ -217,7 +233,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
     setCarrito([]);
 
     setMensaje(
-      "Compra de prueba registrada y stock actualizado"
+      "Compra de prueba registrada y stock actualizado."
     );
   }
 
@@ -230,7 +246,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
 
         <p>
           La farmacia esta disponible solamente
-          para clientes de la veterinaria
+          para visitantes y clientes de la veterinaria.
         </p>
 
         <p>
@@ -517,8 +533,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
           )}
 
           <p className="farmacia-nota">
-            Los productos que requieren receta
-            no pueden comprarse desde este prototipo
+            Los productos que requieren receta no pueden comprarse desde este prototipo
           </p>
 
           {sesion?.rol === "cliente" && (

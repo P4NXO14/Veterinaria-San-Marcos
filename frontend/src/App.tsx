@@ -1,36 +1,34 @@
+
 import { useState } from "react";
 import { Routes, Route, useNavigate } from "react-router-dom";
+
 import type { Sesion } from "./datos/usuarios";
+
 import Encabezado from "./componentes/organismos/Encabezado";
+
 import Inicio from "./paginas/Inicio";
 import Login from "./paginas/Login";
 import Registro from "./paginas/Registro";
+import Nosotros from "./paginas/Nosotros";
+import Contacto from "./paginas/Contacto";
+
+import Servicios from "./paginas/Servicios";
+import DetalleServicio from "./paginas/DetalleServicio";
+
 import Reserva from "./paginas/Reserva";
 import Recepcion from "./paginas/Recepcion";
 import Administracion from "./paginas/Administracion";
-import Nosotros from "./paginas/Nosotros";
-import Contacto from "./paginas/Contacto";
+
 import Farmacia from "./paginas/Farmacia";
 import InventarioFarmacia from "./paginas/InventarioFarmacia";
-
-interface VistaPendienteProps {
-  titulo: string;
-}
-
-function VistaPendiente({ titulo }: VistaPendienteProps) {
-  return (
-    <main className="container py-5">
-      <h1>{titulo}</h1>
-      <p>Esta pagina se encuentra pendiente de migracion a React.</p>
-    </main>
-  );
-}
 
 function App() {
   const navigate = useNavigate();
 
   const [sesion, setSesion] = useState<Sesion | null>(() => {
-    const sesionGuardada = localStorage.getItem("sesionSanMarcos");
+    const sesionGuardada = localStorage.getItem(
+      "sesionSanMarcos"
+    );
 
     if (!sesionGuardada) {
       return null;
@@ -45,29 +43,47 @@ function App() {
 
   function cerrarSesion() {
     localStorage.removeItem("sesionSanMarcos");
+
     setSesion(null);
+
     navigate("/");
   }
 
-  return (
 
+  const puedeVerServicios =
+    !sesion || sesion.rol === "cliente";
+
+
+  const accesoRestringidoServicios = (
+    <main className="contenedor-principal">
+
+      <h1>Acceso restringido</h1>
+
+      <p>
+        Esta seccion esta disponible solamente para visitantes y clientes de la veterinaria
+      </p>
+
+    </main>
+  );
+
+  return (
     <>
+
       <Encabezado
         sesion={sesion}
         onCerrarSesion={cerrarSesion}
       />
 
       <Routes>
-        
-        <Route path="/" element={<Inicio />} 
-        />
-      
-        <Route path="/nosotros" element={<Nosotros />} 
+
+        <Route
+          path="/"
+          element={<Inicio sesion={sesion} />}
         />
 
         <Route
-          path="/servicios"
-          element={<VistaPendiente titulo="Servicios" />}
+          path="/nosotros"
+          element={<Nosotros />}
         />
 
         <Route
@@ -76,16 +92,38 @@ function App() {
         />
 
         <Route
-        path="/reserva"
-        element={<Reserva sesion={sesion} />}
-        />
-
-        <Route path="/registro" element={<Registro />} 
+          path="/registro"
+          element={<Registro />}
         />
 
         <Route
           path="/login"
-          element={<Login onIniciarSesion={setSesion} />}
+          element={
+            <Login onIniciarSesion={setSesion} />
+          }
+        />
+
+        <Route
+          path="/servicios"
+          element={
+            puedeVerServicios
+              ? <Servicios sesion={sesion} />
+              : accesoRestringidoServicios
+          }
+        />
+
+        <Route
+          path="/servicios/:id"
+          element={
+            puedeVerServicios
+              ? <DetalleServicio sesion={sesion} />
+              : accesoRestringidoServicios
+          }
+        />
+
+        <Route
+          path="/reserva"
+          element={<Reserva sesion={sesion} />}
         />
 
         <Route
@@ -102,9 +140,12 @@ function App() {
           path="/farmacia"
           element={<Farmacia sesion={sesion} />}
         />
+
         <Route
           path="/inventario-farmacia"
-          element={<InventarioFarmacia sesion={sesion} />}
+          element={
+            <InventarioFarmacia sesion={sesion} />
+          }
         />
 
       </Routes>
@@ -112,6 +153,7 @@ function App() {
       <footer className="text-center py-3">
         <p>Veterinaria San Marcos</p>
       </footer>
+
     </>
   );
 }

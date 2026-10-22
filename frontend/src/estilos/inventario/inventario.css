@@ -1,0 +1,147 @@
+.inventario-pagina {
+  width: min(1400px, calc(100% - 32px));
+  margin: 32px auto 60px;
+}
+
+.inventario-encabezado {
+  background-color: #8ec7e2;
+  color: #17364a;
+  padding: 25px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.inventario-encabezado h1 {
+  color: #17364a;
+  margin-bottom: 10px;
+}
+
+.inventario-encabezado p {
+  color: #17364a;
+  margin: 0;
+}
+
+.inventario-formulario,
+.inventario-listado {
+  background-color: #ffffff;
+  border: 1px solid #dce3e7;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.inventario-formulario h2,
+.inventario-listado h2 {
+  color: #1c4057;
+  margin-bottom: 20px;
+}
+
+.inventario-campos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.inventario-campos label,
+.inventario-listado label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.inventario-campos input,
+.inventario-campos select,
+.inventario-listado input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #bdcbd3;
+  border-radius: 5px;
+  background-color: #ffffff;
+}
+
+.inventario-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0;
+  font-weight: 500;
+}
+
+.inventario-checkbox input {
+  width: 18px;
+  height: 18px;
+}
+
+.inventario-acciones,
+.inventario-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.inventario-listado > input {
+  max-width: 420px;
+  margin-bottom: 12px;
+}
+
+.inventario-tabla-contenedor {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.inventario-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+
+.inventario-tabla th,
+.inventario-tabla td {
+  padding: 12px;
+  border-bottom: 1px solid #dce3e7;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.inventario-tabla th {
+  background-color: #eaf4f9;
+  color: #17364a;
+}
+
+.inventario-imagen {
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+}
+
+.inventario-stock-normal {
+  color: #247d42;
+  font-weight: 700;
+}
+
+.inventario-stock-bajo {
+  color: #bd5426;
+  font-weight: 700;
+}
+
+.inventario-mensaje {
+  background-color: #eaf6ed;
+  border-left: 4px solid #369a57;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .inventario-campos {
+    grid-template-columns: 1fr;
+  }
+
+  .inventario-formulario,
+  .inventario-listado {
+    padding: 16px;
+  }
+
+  .inventario-tabla {
+    min-width: 850px;
+  }
+}

@@ -1,0 +1,347 @@
+.farmacia-pagina {
+  width: min(1440px, calc(100% - 32px));
+  margin: 32px auto 64px;
+  color: #2882c2;
+}
+
+.farmacia-titulo {
+  background-color: rgb(140, 198, 224);
+  padding: 20px 25px;
+  border-radius: 8px;
+  margin-bottom: 28px;
+}
+
+.farmacia-titulo h1 {
+  color: #132d3d;
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.farmacia-titulo p {
+  color: #132d3d;
+  font-size: 16px;
+}
+
+.farmacia-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  align-items: start;
+  gap: 24px;
+}
+
+.farmacia-catalogo {
+  min-width: 0;
+}
+
+.farmacia-filtros {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.farmacia-filtros > div {
+  flex: 1 1 210px;
+}
+
+.farmacia-filtros label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.farmacia-filtros input,
+.farmacia-filtros select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #b9c9cf;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.farmacia-cantidad {
+  color: #526575;
+  margin: 8px 0 14px;
+}
+
+.farmacia-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.farmacia-tarjeta {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e0e6e9;
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 4%);
+}
+
+.farmacia-foto {
+  height: 210px;
+  position: relative;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.farmacia-foto img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.farmacia-descuento {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 1;
+  background: #ff7619;
+  color: #fff;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.farmacia-informacion {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 9px;
+  padding: 16px;
+  text-align: center;
+}
+
+.farmacia-categoria {
+  color: #647688;
+  font-size: 12px;
+}
+
+.farmacia-informacion h2 {
+  font-size: 15px;
+  line-height: 1.45;
+  min-height: 44px;
+  margin: 0;
+}
+
+.farmacia-precios {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.farmacia-precio-anterior {
+  color: #999;
+  text-decoration: line-through;
+  font-size: 13px;
+}
+
+.farmacia-precios strong {
+  color: #008dcc;
+  font-size: 17px;
+}
+
+.farmacia-stock {
+  margin: 0;
+  color: #23814a;
+  font-size: 13px;
+}
+
+.farmacia-stock.agotado {
+  color: #b42318;
+}
+
+.farmacia-receta {
+  color: #995e00;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.farmacia-informacion button {
+  margin-top: auto;
+  border: 0;
+  border-radius: 4px;
+  padding: 12px 8px;
+  background: #3ebd6a;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.farmacia-informacion button:hover:enabled {
+  background: #279e51;
+}
+
+.farmacia-informacion button:disabled {
+  background: #9ca9a2;
+  cursor: not-allowed;
+}
+
+.farmacia-carrito {
+  position: sticky;
+  top: 24px;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #e0e6e9;
+  background: #fff;
+}
+
+.farmacia-carrito h2 {
+  font-size: 21px;
+}
+
+.farmacia-carrito > p {
+  font-size: 13px;
+  color: #617383;
+}
+
+.farmacia-carrito ul {
+  padding: 0;
+  margin: 20px 0;
+  list-style: none;
+}
+
+.farmacia-carrito li {
+  border-bottom: 1px solid #e0e6e9;
+  padding: 12px 0;
+  font-size: 13px;
+}
+
+.farmacia-carrito-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.farmacia-carrito-fila button {
+  border: 1px solid #bfcbd1;
+  border-radius: 4px;
+  background: #fff;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+.farmacia-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid #e0e6e9;
+  padding-top: 16px;
+  margin-top: 16px;
+}
+
+.farmacia-comprar {
+  display: block;
+  width: 100%;
+  background: #223e54;
+  color: #fff;
+  border: 0;
+  border-radius: 5px;
+  padding: 12px;
+  margin: 16px 0;
+  cursor: pointer;
+}
+
+.farmacia-comprar:disabled {
+  background: #9da8b0;
+  cursor: not-allowed;
+}
+
+.farmacia-nota {
+  line-height: 1.5;
+}
+
+.farmacia-mensaje {
+  margin-top: 18px;
+  padding: 12px 16px;
+  border-left: 4px solid #25845b;
+  background: #f0fbf4;
+}
+
+@media (max-width: 1200px) {
+  .farmacia-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 950px) {
+  .farmacia-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .farmacia-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .farmacia-carrito {
+    position: static;
+  }
+}
+
+@media (max-width: 700px) {
+  .farmacia-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .farmacia-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Uniformar filtros de farmacia */
+
+.farmacia-filtros {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 16px;
+}
+
+.farmacia-filtros > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.farmacia-filtros label {
+  display: block;
+  margin: 0 0 8px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.farmacia-pagina .farmacia-filtros input[type="search"],
+.farmacia-pagina .farmacia-filtros select {
+  display: block;
+  width: 100%;
+  height: 50px;
+  min-height: 50px;
+  max-height: 50px;
+  padding: 0 14px;
+  margin: 0;
+  box-sizing: border-box;
+  border: 1px solid #bdcbd3;
+  border-radius: 5px;
+  background-color: #ffffff;
+}
+
+@media (max-width: 650px) {
+  .farmacia-filtros {
+    grid-template-columns: 1fr;
+  }
+}

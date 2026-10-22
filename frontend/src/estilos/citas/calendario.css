@@ -1,0 +1,62 @@
+.selector-horario {
+    background-color: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.agenda-calendario {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 6px;
+}
+
+.agenda-encabezado {
+    text-align: center;
+    font-weight: bold;
+    padding: 8px 0;
+}
+
+.agenda-dia {
+    border: 1px solid #ddd;
+    background-color: white;
+    border-radius: 6px;
+    min-height: 42px;
+    cursor: pointer;
+}
+
+.agenda-dia:hover:not(:disabled) {
+    background-color: #e8f4ff;
+}
+
+.agenda-dia-seleccionado {
+    background-color: #2c3e50;
+    color: white;
+}
+
+.agenda-dia:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.agenda-horas {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+
+@media (max-width: 575px) {
+    .selector-horario {
+        padding: 12px;
+    }
+
+    .agenda-horas {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .agenda-dia {
+        min-height: 36px;
+    }
+}

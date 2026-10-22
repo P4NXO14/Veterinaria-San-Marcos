@@ -1,0 +1,72 @@
+.detalle-servicio-pagina {
+  width: min(1100px, calc(100% - 32px));
+  margin: 35px auto 60px;
+}
+
+.detalle-volver {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: #236a94;
+  font-weight: 600;
+}
+
+.detalle-servicio-contenido {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  padding: 25px;
+  background-color: #ffffff;
+  border: 1px solid #dce3e7;
+  border-radius: 10px;
+}
+
+.detalle-servicio-imagen img {
+  width: 100%;
+  height: 350px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.detalle-servicio-informacion h1 {
+  color: #17364a;
+  margin: 12px 0 20px;
+}
+
+.detalle-servicio-informacion p {
+  margin-bottom: 14px;
+}
+
+.detalle-servicio-categoria {
+  color: #236a94;
+  font-weight: 600;
+}
+
+.detalle-servicio-precio {
+  color: #008dcc;
+  font-size: 28px;
+  font-weight: 700;
+  margin-top: 24px;
+}
+
+.enlace-ficha-servicio {
+  display: block;
+  margin: 12px 0;
+  color: #236a94;
+  font-weight: 600;
+  text-align: center;
+}
+
+.enlace-ficha-servicio:hover {
+  color: #17364a;
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .detalle-servicio-contenido {
+    grid-template-columns: 1fr;
+  }
+
+  .detalle-servicio-imagen img {
+    height: 250px;
+  }
+}

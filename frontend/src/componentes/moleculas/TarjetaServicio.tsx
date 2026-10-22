@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Servicio } from "../../datos/servicios";
+import { Link } from "react-router-dom";
 
 interface TarjetaServicioProps {
   servicio: Servicio;
@@ -48,6 +49,10 @@ function TarjetaServicio({ servicio, onSolicitarCita }: TarjetaServicioProps) {
           <p><strong>Observaciones:</strong> {servicio.obs}</p>
         </div>
       )}
+
+        <Link to={`/servicios/${servicio.id}`} className="enlace-ficha-servicio">
+          Ver ficha completa
+        </Link>
 
       <button
         type="button"
