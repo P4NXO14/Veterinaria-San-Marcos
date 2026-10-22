@@ -14,16 +14,20 @@ function Inicio({ sesion }: InicioProps) {
   const navigate = useNavigate();
 
   function solicitarCita(id: string) {
-
     if (!sesion) {
       const confirmar = window.confirm(
-        "Debes iniciar sesion antes de solicitar una cita. ¿Deseas ir a iniciar sesion?"
+        "Debes iniciar sesion o registrarte para solicitar una cita ¿Deseas iniciar sesion?"
       );
 
       if (confirmar) {
+        sessionStorage.setItem(
+          "servicioCitaSanMarcos",
+          id
+        );
+
         localStorage.setItem(
           "destinoSanMarcos",
-          "/servicios"
+          "/reserva"
         );
 
         navigate("/login");
@@ -34,9 +38,8 @@ function Inicio({ sesion }: InicioProps) {
 
     if (sesion.rol !== "cliente") {
       window.alert(
-        "Solo el dueño de mascota puede solicitar citas desde el catalogo."
+        "Solo los clientes pueden solicitar citas veterinarias"
       );
-
       return;
     }
 
@@ -48,43 +51,38 @@ function Inicio({ sesion }: InicioProps) {
     navigate("/reserva");
   }
 
+  const puedeVerCatalogo =
+    !sesion || sesion.rol === "cliente";
+
   return (
     <main>
-
       <section className="hero">
-
         <h1>Veterinaria San Marcos</h1>
 
         <p>
           Clinica veterinaria ubicada en Rancagua,
-          Region del Libertador General Bernardo O'Higgins.
+          Region del Libertador General Bernardo O'Higgins
         </p>
 
         <p>
-          Atencion veterinaria para perros, gatos,
-          conejos y aves.
+          Atencion veterinaria para perros, gatos, conejos y aves
         </p>
-
       </section>
 
-      {sesion?.rol === "cliente" && (
+      <section className="destacados">
+        <h2>Servicios destacados</h2>
 
-        <section className="destacados">
+        <div id="contenedor-servicios">
+          {servicios.slice(0, 6).map((servicio) => (
+            <TarjetaServicio
+              key={servicio.id}
+              servicio={servicio}
+              onSolicitarCita={solicitarCita}
+            />
+          ))}
+        </div>
 
-          <h2>Servicios destacados</h2>
-
-          <div id="contenedor-servicios">
-
-            {servicios.slice(0, 6).map((servicio) => (
-              <TarjetaServicio
-                key={servicio.id}
-                servicio={servicio}
-                onSolicitarCita={solicitarCita}
-              />
-            ))}
-
-          </div>
-
+        {puedeVerCatalogo && (
           <p className="texto-centrado">
             <Link
               className="enlace-destacado"
@@ -93,11 +91,8 @@ function Inicio({ sesion }: InicioProps) {
               Ver catalogo completo
             </Link>
           </p>
-
-        </section>
-
-      )}
-
+        )}
+      </section>
     </main>
   );
 }

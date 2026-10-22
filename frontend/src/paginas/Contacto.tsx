@@ -14,8 +14,12 @@ function Contacto({ sesion }: ContactoProps) {
 
   useEffect(() => {
     if (!sesion) {
-      localStorage.setItem("destinoSanMarcos", "/contacto");
-      navigate("/login", { replace: true });
+      navigate("/login", {
+        replace: true,
+        state: {
+          destino: "/contacto"
+        }
+      });
     }
   }, [sesion, navigate]);
 
@@ -29,8 +33,7 @@ function Contacto({ sesion }: ContactoProps) {
         <h1>Acceso restringido</h1>
 
         <p>
-          Esta seccion esta disponible solamente
-          para los clientes de la veterinaria.
+          Esta seccion esta disponible solamente para los clientes de la veterinaria
         </p>
       </main>
     );

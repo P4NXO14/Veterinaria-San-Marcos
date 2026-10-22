@@ -1,6 +1,9 @@
+
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useLocation, useNavigate } from "react-router-dom";
+
 import CampoFormulario from "../moleculas/CampoFormulario";
 import { obtenerUsuarios } from "../../datos/usuarios";
 import type { Sesion } from "../../datos/usuarios";
@@ -9,8 +12,16 @@ interface FormularioLoginProps {
   onIniciarSesion: (sesion: Sesion) => void;
 }
 
-function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
+interface EstadoNavegacion {
+  destino?: string;
+}
+
+function FormularioLogin({
+  onIniciarSesion
+}: FormularioLoginProps) {
+
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [correo, setCorreo] = useState("");
   const [password, setPassword] = useState("");
@@ -31,12 +42,16 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado) ||
       correoNormalizado.length > 100
     ) {
-      mostrarError("Error: Ingresa un correo valido de hasta 100 caracteres.");
+      mostrarError(
+        "Error: Ingresa un correo valido de hasta 100 caracteres"
+      );
       return;
     }
 
     if (password.length < 4 || password.length > 10) {
-      mostrarError("Error: La contraseña debe tener entre 4 y 10 caracteres.");
+      mostrarError(
+        "Error: La contraseña debe tener entre 4 y 10 caracteres"
+      );
       return;
     }
 
@@ -49,12 +64,16 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
     );
 
     if (!usuario) {
-      mostrarError("Error: Correo o contraseña incorrectos. Debes registrarte antes de iniciar sesion.");
+      mostrarError(
+        "Error: Correo o contraseña incorrectos Debes registrarte antes de iniciar sesion"
+      );
       return;
     }
 
     if (usuario.activo === false) {
-      mostrarError("Error: Esta cuenta se encuentra desactivada.");
+      mostrarError(
+        "Error: Esta cuenta se encuentra desactivada"
+      );
       return;
     }
 
@@ -73,16 +92,44 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
 
     onIniciarSesion(sesion);
 
-    setMensaje(`Bienvenido ${usuario.nombre}. Inicio de sesion correcto.`);
+    setMensaje(
+      `Bienvenido ${usuario.nombre}. Inicio de sesion correcto`
+    );
+
     setTipoMensaje("exito");
 
-    const destino =
-      localStorage.getItem("destinoSanMarcos") || "/servicios";
+    const estadoNavegacion = location.state as
+      | EstadoNavegacion
+      | null;
+
+    const destinoDesdeNavegacion =
+      estadoNavegacion?.destino;
+
+
+    const destinoGuardado = localStorage.getItem(
+      "destinoSanMarcos"
+    );
 
     localStorage.removeItem("destinoSanMarcos");
 
+    let destino = "/";
+
+    if (sesion.rol === "cliente") {
+
+      if (destinoDesdeNavegacion === "/contacto") {
+        destino = "/contacto";
+
+      } else if (
+        destinoGuardado === "/reserva" ||
+        destinoGuardado === "/farmacia"
+      ) {
+        destino = destinoGuardado;
+      }
+
+    }
+
     window.setTimeout(() => {
-      navigate(destino);
+      navigate(destino, { replace: true });
     }, 800);
   }
 
@@ -93,6 +140,7 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
       onSubmit={iniciarSesion}
       noValidate
     >
+
       <CampoFormulario
         id="loginCorreo"
         etiqueta="Correo electronico:"
@@ -115,7 +163,10 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
         autoComplete="current-password"
       />
 
-      <button type="submit" className="btn-principal">
+      <button
+        type="submit"
+        className="btn-principal"
+      >
         Ingresar
       </button>
 
@@ -127,6 +178,7 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
           {mensaje}
         </p>
       )}
+
     </form>
   );
 }

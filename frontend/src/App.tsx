@@ -44,6 +44,8 @@ function App() {
   function cerrarSesion() {
     localStorage.removeItem("sesionSanMarcos");
 
+    localStorage.removeItem("destinoSanMarcos");
+
     setSesion(null);
 
     navigate("/");
@@ -56,19 +58,16 @@ function App() {
 
   const accesoRestringidoServicios = (
     <main className="contenedor-principal">
-
       <h1>Acceso restringido</h1>
 
       <p>
         Esta seccion esta disponible solamente para visitantes y clientes de la veterinaria
       </p>
-
     </main>
   );
 
   return (
     <>
-
       <Encabezado
         sesion={sesion}
         onCerrarSesion={cerrarSesion}
@@ -153,7 +152,6 @@ function App() {
       <footer className="text-center py-3">
         <p>Veterinaria San Marcos</p>
       </footer>
-
     </>
   );
 }
