@@ -4,10 +4,13 @@ import type { FormEvent } from "react";
 import Input from "../atomos/Input";
 import SelectorHorario from "./SelectorHorario";
 import { servicios } from "../../datos/servicios";
-import { profesionales } from "../../datos/profesionales";
 import { obtenerHorasDisponibles } from "../../datos/horarios";
 import { crearCita } from "../../datos/citas";
 import type { Sesion } from "../../datos/usuarios";
+
+import {obtenerProfesionalesCompatibles} from "../../datos/compatibilidad";
+
+import {obtenerEspeciesPermitidas,esEspecieCompatible} from "../../datos/compatibilidadEspecies";
 
 interface FormularioCitaProps {
   sesion: Sesion;
@@ -41,20 +44,11 @@ function FormularioCita({
     (item) => item.id === servicio
   );
 
-  const profesionalesPermitidos = profesionales.filter((item) => {
-    if (!servicioSeleccionado) {
-      return false;
-    }
-
-    if (item.tipo === "veterinario") {
-      return true;
-    }
-
-    return (
-      servicioSeleccionado.categoria === "Enfermeria" ||
-      servicioSeleccionado.categoria === "Apoyo clinico"
-    );
-  });
+  const profesionalesPermitidos =
+    obtenerProfesionalesCompatibles(servicio);
+    
+  const especiesPermitidas =
+    obtenerEspeciesPermitidas(servicio);
 
   const horasDisponibles =
     fecha && profesional && servicio
@@ -69,6 +63,7 @@ function FormularioCita({
   function cambiarServicio(id: string) {
     setServicio(id);
     setProfesional("");
+    setEspecie("");
     setFecha("");
     setHora("");
     setMensaje("");
@@ -96,12 +91,12 @@ function FormularioCita({
     e.preventDefault();
 
     if (sesion.rol !== "cliente") {
-      mostrarError("Debes iniciar sesion como dueño de mascota.");
+      mostrarError("Debes iniciar sesion como dueño de mascota");
       return;
     }
 
     if (!servicioSeleccionado) {
-      mostrarError("Selecciona un servicio veterinario.");
+      mostrarError("Selecciona un servicio veterinario");
       return;
     }
 
@@ -109,32 +104,39 @@ function FormularioCita({
       !profesional ||
       !profesionalesPermitidos.some((item) => item.id === profesional)
     ) {
-      mostrarError("Selecciona un profesional disponible para el servicio.");
+      mostrarError("Selecciona un profesional disponible para el servicio");
       return;
     }
 
     if (!mascota.trim()) {
-      mostrarError("Ingresa el nombre de la mascota.");
+      mostrarError("Ingresa el nombre de la mascota");
       return;
     }
 
     if (!especie) {
-      mostrarError("Selecciona la especie de tu mascota.");
+      mostrarError("Selecciona la especie de tu mascota");
+      return;
+    }
+
+    if (!esEspecieCompatible(servicio, especie)) {
+      mostrarError(
+        "La especie de tu mascota no es compatible con el servicio seleccionado"
+      );
       return;
     }
 
     if (!motivo.trim()) {
-      mostrarError("Ingresa el motivo de la consulta.");
+      mostrarError("Ingresa el motivo de la consulta");
       return;
     }
 
     if (!fecha) {
-      mostrarError("Selecciona una fecha del calendario.");
+      mostrarError("Selecciona una fecha del calendario");
       return;
     }
 
     if (!hora) {
-      mostrarError("Debes seleccionar y confirmar una hora.");
+      mostrarError("Debes seleccionar y confirmar una hora");
       return;
     }
 
@@ -147,7 +149,7 @@ function FormularioCita({
     if (!disponibilidadActual.includes(hora)) {
       setHora("");
       mostrarError(
-        "La hora seleccionada ya no esta disponible. Selecciona otra."
+        "La hora seleccionada ya no esta disponible. Selecciona otra"
       );
       return;
     }
@@ -178,7 +180,7 @@ function FormularioCita({
     setHora("");
 
     setMensaje(
-      "Solicitud de cita enviada. Queda pendiente de confirmacion por recepcion."
+      "Solicitud de cita enviada. Queda pendiente de confirmacion por recepcion"
     );
     setTipoMensaje("exito");
 
@@ -208,6 +210,13 @@ function FormularioCita({
           </option>
         ))}
       </select>
+
+      {servicio === "OT004" && (
+        <p className="mensaje-formulario">
+          La hospitalizacion de 24 horas requiere coordinacion directa con recepcion.
+          No permite reserva automatica
+        </p>
+      )}
 
       <label htmlFor="citaProfesional">
         Profesional:
@@ -248,14 +257,18 @@ function FormularioCita({
       <select
         id="citaEspecie"
         value={especie}
-        onChange={(e) => setEspecie(e.target.value)}
-        required
-      >
-        <option value="">Seleccione</option>
-        <option value="Perro">Perro</option>
-        <option value="Gato">Gato</option>
-        <option value="Ave">Ave</option>
-        <option value="Conejo">Conejo</option>
+        onChange={(e) => {
+          setEspecie(e.target.value);
+          setMensaje("");
+        }}
+        disabled={!servicio || especiesPermitidas.length === 0}required>
+        <option value="">Seleccione una especie</option>
+
+        {especiesPermitidas.map((item) => (
+          <option key={item} value={item}>
+            {item}
+          </option>
+        ))}
       </select>
 
       <label htmlFor="citaMotivo">Motivo:</label>

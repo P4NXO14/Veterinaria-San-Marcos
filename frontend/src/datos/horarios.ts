@@ -3,6 +3,7 @@ import { profesionales } from "./profesionales";
 import { servicios } from "./servicios";
 import { obtenerCitas } from "./citas";
 import type { Cita } from "./citas";
+import {esProfesionalCompatible} from "./compatibilidad";
 
 function convertirAMinutos(hora: string): number | null {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {
@@ -90,6 +91,12 @@ export function obtenerHorasDisponibles(
   );
 
   if (!profesional || !servicio) {
+    return [];
+  }
+
+  if (!esProfesionalCompatible(
+    servicioId,
+    profesionalId)){
     return [];
   }
 
