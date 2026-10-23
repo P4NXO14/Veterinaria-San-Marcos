@@ -1,4 +1,3 @@
-
 export interface Cita {
   id: string;
   propietario: string;

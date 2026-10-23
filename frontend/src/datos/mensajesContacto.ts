@@ -1,4 +1,3 @@
-
 export interface MensajeContacto {
   id: string;
   nombre: string;

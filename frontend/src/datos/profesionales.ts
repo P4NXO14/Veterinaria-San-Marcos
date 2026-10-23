@@ -1,4 +1,3 @@
-
 export interface Turno {
   inicio: string;
   fin: string;

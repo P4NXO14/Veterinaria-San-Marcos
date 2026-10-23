@@ -1,4 +1,3 @@
-
 import { profesionales } from "./profesionales";
 import type { Profesional } from "./profesionales";
 

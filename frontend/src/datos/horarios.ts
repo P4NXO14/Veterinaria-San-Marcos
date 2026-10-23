@@ -1,4 +1,3 @@
-
 import { profesionales } from "./profesionales";
 import { servicios } from "./servicios";
 import { obtenerCitas } from "./citas";

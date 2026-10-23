@@ -1,13 +1,6 @@
-
 import { useState } from "react";
 
-import {
-  obtenerCitas,
-  confirmarCita,
-  proponerHorarioCita,
-  cancelarCita,
-  eliminarCitaCancelada
-} from "../datos/citas";
+import {obtenerCitas,confirmarCita,proponerHorarioCita,cancelarCita,eliminarCitaCancelada} from "../datos/citas";
 
 import type { Cita } from "../datos/citas";
 import type { Sesion } from "../datos/usuarios";

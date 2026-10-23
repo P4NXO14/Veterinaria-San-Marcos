@@ -1,4 +1,3 @@
-
 export interface ProductoFarmacia {
   id: string;
   nombre: string;
@@ -109,7 +108,7 @@ export function obtenerProductosFarmacia(): ProductoFarmacia[] {
       return resultado as ProductoFarmacia[];
     }
   } catch {
-    // Si los datos guardados no son validos, usar los iniciales
+    
   }
 
   return productosIniciales.map((producto) => ({
