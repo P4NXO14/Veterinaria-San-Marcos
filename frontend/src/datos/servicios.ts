@@ -22,7 +22,7 @@ export const servicios: Servicio[] = [
     duracion: "30 min",
     precio: 15000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
   {
     id: "SV002",
@@ -32,7 +32,7 @@ export const servicios: Servicio[] = [
     duracion: "30 min",
     precio: 25000,
     obs: "Fuera de horario +$10.000",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
   {
     id: "SV003",
@@ -42,7 +42,7 @@ export const servicios: Servicio[] = [
     duracion: "20 min",
     precio: 10000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
   {
     id: "SV004",
@@ -52,7 +52,7 @@ export const servicios: Servicio[] = [
     duracion: "30 min",
     precio: 18000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/ave_1.jpg"
   },
   {
     id: "SV005",
@@ -62,7 +62,7 @@ export const servicios: Servicio[] = [
     duracion: "40 min",
     precio: 20000,
     obs: "Requiere ficha previa",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
 
   // Vacunacion
@@ -75,7 +75,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 12000,
     obs: "Obligatoria por ley",
-    imagen: "/img/vacuna.jpg"
+    imagen: "/img/vacuna_perro_1.jpg"
   },
   {
     id: "VA002",
@@ -85,7 +85,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 18000,
     obs: "Refuerzo anual",
-    imagen: "/img/vacuna.jpg"
+    imagen: "/img/vacuna_perro_1.jpg"
   },
   {
     id: "VA003",
@@ -95,7 +95,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 15000,
     obs: "Refuerzo anual",
-    imagen: "/img/vacuna.jpg"
+    imagen: "/img/vacuna_gato_1.jpg"
   },
   {
     id: "VA004",
@@ -105,7 +105,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 17000,
     obs: "Refuerzo anual",
-    imagen: "/img/vacuna.jpg"
+    imagen: "/img/vacuna_gato_1.jpg"
   },
   {
     id: "VA005",
@@ -115,7 +115,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 14000,
     obs: "Tos de las perreras",
-    imagen: "/img/vacuna.jpg"
+    imagen: "/img/vacuna_perro_1.jpg"
   },
   {
     id: "VA006",
@@ -125,7 +125,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 12000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/vacuna.jpg"
+    imagen: "/img/vacuna_gato_1.jpg"
   },
 
   // Cirugia
@@ -138,7 +138,7 @@ export const servicios: Servicio[] = [
     duracion: "90 min",
     precio: 80000,
     obs: "Incluye anestesia y hospitalizacion 24h",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/cirujia_perro.jpg"
   },
   {
     id: "CI002",
@@ -148,7 +148,7 @@ export const servicios: Servicio[] = [
     duracion: "60 min",
     precio: 60000,
     obs: "Incluye anestesia",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/cirujia_perro.jpg"
   },
   {
     id: "CI003",
@@ -158,7 +158,7 @@ export const servicios: Servicio[] = [
     duracion: "60 min",
     precio: 65000,
     obs: "Incluye anestesia y hospitalizacion 12h",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/cirujia_gato.jpg"
   },
   {
     id: "CI004",
@@ -168,7 +168,7 @@ export const servicios: Servicio[] = [
     duracion: "45 min",
     precio: 50000,
     obs: "Incluye anestesia",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/cirujia_gato.jpg"
   },
   {
     id: "CI005",
@@ -178,7 +178,7 @@ export const servicios: Servicio[] = [
     duracion: "60 min",
     precio: 120000,
     obs: "Precio referencial; varia segun tamaño",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/cirujia_perro.jpg"
   },
   {
     id: "CI006",
@@ -188,7 +188,7 @@ export const servicios: Servicio[] = [
     duracion: "120 min",
     precio: 180000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/cirujia_gato.jpg"
   },
 
   // Desparasitacion
@@ -201,7 +201,7 @@ export const servicios: Servicio[] = [
     duracion: "5 min",
     precio: 8000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/desparasitacion.jpg"
   },
   {
     id: "DE002",
@@ -211,7 +211,7 @@ export const servicios: Servicio[] = [
     duracion: "5 min",
     precio: 9500,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/desparasitacion.jpg"
   },
   {
     id: "DE003",
@@ -221,7 +221,7 @@ export const servicios: Servicio[] = [
     duracion: "5 min",
     precio: 11000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/desparasitacion.jpg"
   },
   {
     id: "DE004",
@@ -231,7 +231,7 @@ export const servicios: Servicio[] = [
     duracion: "5 min",
     precio: 8000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/desparasitacion.jpg"
   },
   {
     id: "DE005",
@@ -241,7 +241,7 @@ export const servicios: Servicio[] = [
     duracion: "5 min",
     precio: 7500,
     obs: "Incluye aplicacion",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/desparasitacion.jpg"
   },
 
   // Examenes
@@ -254,7 +254,7 @@ export const servicios: Servicio[] = [
     duracion: "30 min",
     precio: 22000,
     obs: "Resultado en 24-48 h",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/hemograma.jpg"
   },
   {
     id: "EX002",
@@ -264,7 +264,7 @@ export const servicios: Servicio[] = [
     duracion: "30 min",
     precio: 35000,
     obs: "Resultado en 24-48 h",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
   {
     id: "EX003",
@@ -274,7 +274,7 @@ export const servicios: Servicio[] = [
     duracion: "20 min",
     precio: 28000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/radiografia.jpg"
   },
   {
     id: "EX004",
@@ -284,7 +284,7 @@ export const servicios: Servicio[] = [
     duracion: "30 min",
     precio: 45000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/ecografia.jpg"
   },
   {
     id: "EX005",
@@ -294,7 +294,7 @@ export const servicios: Servicio[] = [
     duracion: "20 min",
     precio: 18000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
 
   // Otros
@@ -307,7 +307,7 @@ export const servicios: Servicio[] = [
     duracion: "15 min",
     precio: 5000,
     obs: "Sin observaciones adicionales",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/corte_uñas.jpg"
   },
   {
     id: "OT002",
@@ -317,7 +317,7 @@ export const servicios: Servicio[] = [
     duracion: "45 min",
     precio: 55000,
     obs: "Requiere anestesia",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/limpieza_dental.jpg"
   },
   {
     id: "OT003",
@@ -327,7 +327,7 @@ export const servicios: Servicio[] = [
     duracion: "10 min",
     precio: 15000,
     obs: "Incluye registro",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   },
   {
     id: "OT004",
@@ -337,6 +337,6 @@ export const servicios: Servicio[] = [
     duracion: "24 h",
     precio: 30000,
     obs: "Incluye monitoreo y alimentacion basica",
-    imagen: "/img/gato.jpg"
+    imagen: "/img/resto_operaciones.jpg"
   }
 ];

@@ -25,3 +25,11 @@
     color: #117864;
     font-weight: bold;
 }
+
+.hero-imagen {
+    display: block;
+    width: min(100%, 340px);
+    height: auto;
+    margin: 20px auto;
+    border-radius: 8px;
+}

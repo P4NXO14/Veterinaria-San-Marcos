@@ -37,7 +37,7 @@ function FormularioAgregarPersonal({
     const direccionLimpia = direccion.trim();
 
     if (!validarRUT(rutLimpio)) {
-      setMensaje("Ingresa un RUN valido sin puntos ni guion.");
+      setMensaje("Ingresa un RUN valido sin puntos ni guion");
       return;
     }
 
@@ -54,40 +54,40 @@ function FormularioAgregarPersonal({
             : "administrador";
 
       setMensaje(
-        `Error: Este RUN ya esta registrado en una cuenta de ${tipoCuenta}.`
+        `Error: Este RUN ya esta registrado en una cuenta de ${tipoCuenta}`
       );
       return;
     }
 
     if (!nombreLimpio || nombreLimpio.length > 50) {
-      setMensaje("Ingresa un nombre valido de hasta 50 caracteres.");
+      setMensaje("Ingresa un nombre valido de hasta 50 caracteres");
       return;
     }
 
     if (!apellidosLimpios || apellidosLimpios.length > 100) {
-      setMensaje("Ingresa apellidos validos de hasta 100 caracteres.");
+      setMensaje("Ingresa apellidos validos de hasta 100 caracteres");
       return;
     }
 
     if (!validarCorreoPorRol(correoLimpio, "recepcionista")) {
       setMensaje(
-        "El correo debe ser @sanmarcos.com y no puede ser el del administrador."
+        "El correo debe ser @sanmarcos.com y no puede ser el del administrador"
       );
       return;
     }
 
     if (!direccionLimpia || direccionLimpia.length > 300) {
-      setMensaje("Ingresa una direccion valida de hasta 300 caracteres.");
+      setMensaje("Ingresa una direccion valida de hasta 300 caracteres");
       return;
     }
 
     if (password.length < 4 || password.length > 10) {
-      setMensaje("La contraseña debe tener entre 4 y 10 caracteres.");
+      setMensaje("La contraseña debe tener entre 4 y 10 caracteres");
       return;
     }
 
     if (password !== confirmarPassword) {
-      setMensaje("Las contraseñas no coinciden.");
+      setMensaje("Las contraseñas no coinciden");
       return;
     }
 
@@ -108,7 +108,7 @@ function FormularioAgregarPersonal({
       <h2>Agregar Personal</h2>
 
       <p>
-        Registra una nueva cuenta para el personal de la veterinaria.
+        Registra una nueva cuenta para el personal de la veterinaria
       </p>
 
       <form

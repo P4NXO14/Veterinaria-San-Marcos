@@ -59,6 +59,12 @@ function Inicio({ sesion }: InicioProps) {
       <section className="hero">
         <h1>Veterinaria San Marcos</h1>
 
+        <img
+          src="/img/pagina_inicio.jpg"
+          alt="Grupo de perros"
+          className="hero-imagen"
+        />
+
         <p>
           Clinica veterinaria ubicada en Rancagua,
           Region del Libertador General Bernardo O'Higgins
