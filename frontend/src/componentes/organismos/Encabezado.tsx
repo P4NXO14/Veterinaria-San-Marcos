@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import Logo from "../atomos/Logo";
+import Logo from "../atomos/logo";
 import EnlaceNavegacion from "../atomos/EnlaceNavegacion";
 
 import type { Sesion } from "../../datos/usuarios";

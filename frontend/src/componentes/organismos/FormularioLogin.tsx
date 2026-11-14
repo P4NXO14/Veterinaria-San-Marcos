@@ -1,185 +1,128 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-
-import { useLocation, useNavigate } from "react-router-dom";
-
+import {useState} from "react";
+import type {FormEvent} from "react";
+import {useLocation,useNavigate} from "react-router-dom";
 import CampoFormulario from "../moleculas/CampoFormulario";
-import { obtenerUsuarios } from "../../datos/usuarios";
-import type { Sesion } from "../../datos/usuarios";
+import {iniciarSesionUsuario} from "../../datos/usuariosApi";
+import type {Sesion} from "../../datos/usuarios";
 
 interface FormularioLoginProps {
-  onIniciarSesion: (sesion: Sesion) => void;
+    onIniciarSesion: (sesion: Sesion) => void;
 }
 
 interface EstadoNavegacion {
-  destino?: string;
+    destino?: string;
 }
 
-function FormularioLogin({
-  onIniciarSesion
-}: FormularioLoginProps) {
+function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
+    const navigate = useNavigate();
+    const location = useLocation();
 
-  const navigate = useNavigate();
-  const location = useLocation();
+    const [correo, setCorreo] = useState("");
+    const [password, setPassword] = useState("");
+    const [mensaje, setMensaje] = useState("");
+    const [tipoMensaje, setTipoMensaje] = useState<"error" | "exito">("error");
+    const [ingresando, setIngresando] = useState(false);
 
-  const [correo, setCorreo] = useState("");
-  const [password, setPassword] = useState("");
-  const [mensaje, setMensaje] = useState("");
-  const [tipoMensaje, setTipoMensaje] = useState("error");
-
-  function mostrarError(texto: string) {
-    setMensaje(texto);
-    setTipoMensaje("error");
-  }
-
-  function iniciarSesion(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
-    const correoNormalizado = correo.trim().toLowerCase();
-
-    if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado) ||
-      correoNormalizado.length > 100
-    ) {
-      mostrarError(
-        "Error: Ingresa un correo valido de hasta 100 caracteres"
-      );
-      return;
+    function mostrarError(texto: string) {
+        setMensaje(texto);
+        setTipoMensaje("error");
     }
 
-    if (password.length < 4 || password.length > 10) {
-      mostrarError(
-        "Error: La contraseña debe tener entre 4 y 10 caracteres"
-      );
-      return;
+    async function iniciarSesion(e: FormEvent<HTMLFormElement>) {
+        e.preventDefault();
+
+        if (ingresando) {
+            return;
+        }
+
+        const correoNormalizado = correo.trim().toLowerCase();
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoNormalizado) || correoNormalizado.length > 100) {
+            mostrarError("Error: Ingresa un correo valido de hasta 100 caracteres");
+            return;
+        }
+
+        if (password.length < 4 || password.length > 10) {
+            mostrarError("Error: La contraseña debe tener entre 4 y 10 caracteres");
+            return;
+        }
+
+        setIngresando(true);
+        setMensaje("");
+
+        try {
+            const sesion = await iniciarSesionUsuario({
+                correo: correoNormalizado,
+                password
+            });
+
+            localStorage.setItem("sesionSanMarcos", JSON.stringify(sesion));
+            onIniciarSesion(sesion);
+
+            setMensaje(`Bienvenido ${sesion.nombre}. Inicio de sesion correcto`);
+            setTipoMensaje("exito");
+
+            const estadoNavegacion = location.state as EstadoNavegacion | null;
+            const destinoDesdeNavegacion = estadoNavegacion?.destino;
+            const destinoGuardado = localStorage.getItem("destinoSanMarcos");
+
+            localStorage.removeItem("destinoSanMarcos");
+
+            let destino = "/";
+
+            if (sesion.rol === "cliente") {
+                if (destinoDesdeNavegacion === "/contacto") {
+                    destino = "/contacto";
+                } else if (destinoGuardado === "/reserva" || destinoGuardado === "/farmacia") {
+                    destino = destinoGuardado;
+                }
+            }
+
+            window.setTimeout(() => {
+                navigate(destino, {replace: true});
+            }, 800);
+        } catch (error) {
+            mostrarError(error instanceof Error ? error.message : "Error al iniciar sesion.");
+        } finally {
+            setIngresando(false);
+        }
     }
 
-    const usuarios = obtenerUsuarios();
+    return (
+        <form id="formLogin" className="formulario-vertical" onSubmit={iniciarSesion} noValidate>
+            <CampoFormulario
+                id="loginCorreo"
+                etiqueta="Correo electronico:"
+                tipo="email"
+                valor={correo}
+                onChange={setCorreo}
+                maxLength={100}
+                autoComplete="email"
+                placeholder="nombre@correo.cl"
+            />
 
-    const usuario = usuarios.find(
-      (item) =>
-        item.correo === correoNormalizado &&
-        item.password === password
+            <CampoFormulario
+                id="loginPass"
+                etiqueta="Contraseña:"
+                tipo="password"
+                valor={password}
+                onChange={setPassword}
+                minLength={4}
+                maxLength={10}
+                autoComplete="current-password"
+            />
+
+            <button type="submit" className="btn-principal" disabled={ingresando}>
+                {ingresando ? "Ingresando..." : "Ingresar"}
+            </button>
+
+            {mensaje && (
+                <p className={`mensaje-formulario mensaje-${tipoMensaje}`} role={tipoMensaje === "error" ? "alert" : "status"}>
+                    {mensaje}
+                </p>
+            )}
+        </form>
     );
-
-    if (!usuario) {
-      mostrarError(
-        "Error: Correo o contraseña incorrectos Debes registrarte antes de iniciar sesion"
-      );
-      return;
-    }
-
-    if (usuario.activo === false) {
-      mostrarError(
-        "Error: Esta cuenta se encuentra desactivada"
-      );
-      return;
-    }
-
-    const sesion: Sesion = {
-      rut: usuario.rut,
-      nombre: usuario.nombre,
-      apellidos: usuario.apellidos,
-      correo: usuario.correo,
-      rol: usuario.rol
-    };
-
-    localStorage.setItem(
-      "sesionSanMarcos",
-      JSON.stringify(sesion)
-    );
-
-    onIniciarSesion(sesion);
-
-    setMensaje(
-      `Bienvenido ${usuario.nombre}. Inicio de sesion correcto`
-    );
-
-    setTipoMensaje("exito");
-
-    const estadoNavegacion = location.state as
-      | EstadoNavegacion
-      | null;
-
-    const destinoDesdeNavegacion =
-      estadoNavegacion?.destino;
-
-
-    const destinoGuardado = localStorage.getItem(
-      "destinoSanMarcos"
-    );
-
-    localStorage.removeItem("destinoSanMarcos");
-
-    let destino = "/";
-
-    if (sesion.rol === "cliente") {
-
-      if (destinoDesdeNavegacion === "/contacto") {
-        destino = "/contacto";
-
-      } else if (
-        destinoGuardado === "/reserva" ||
-        destinoGuardado === "/farmacia"
-      ) {
-        destino = destinoGuardado;
-      }
-
-    }
-
-    window.setTimeout(() => {
-      navigate(destino, { replace: true });
-    }, 800);
-  }
-
-  return (
-    <form
-      id="formLogin"
-      className="formulario-vertical"
-      onSubmit={iniciarSesion}
-      noValidate
-    >
-
-      <CampoFormulario
-        id="loginCorreo"
-        etiqueta="Correo electronico:"
-        tipo="email"
-        valor={correo}
-        onChange={setCorreo}
-        maxLength={100}
-        autoComplete="email"
-        placeholder="nombre@correo.cl"
-      />
-
-      <CampoFormulario
-        id="loginPass"
-        etiqueta="Contraseña:"
-        tipo="password"
-        valor={password}
-        onChange={setPassword}
-        minLength={4}
-        maxLength={10}
-        autoComplete="current-password"
-      />
-
-      <button
-        type="submit"
-        className="btn-principal"
-      >
-        Ingresar
-      </button>
-
-      {mensaje && (
-        <p
-          className={`mensaje-formulario mensaje-${tipoMensaje}`}
-          role={tipoMensaje === "error" ? "alert" : "status"}
-        >
-          {mensaje}
-        </p>
-      )}
-
-    </form>
-  );
 }
 
 export default FormularioLogin;

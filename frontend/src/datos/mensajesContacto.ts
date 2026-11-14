@@ -1,50 +1,94 @@
 export interface MensajeContacto {
-  id: string;
-  nombre: string;
-  correo: string;
-  comentario: string;
-  correoCuenta: string;
-  fechaEnvio: string;
+    id: number;
+    nombre: string;
+    correo: string;
+    comentario: string;
+    correoCuenta: string;
+    fechaEnvio: string;
+    estado: string;
 }
 
-export function obtenerMensajesContacto(): MensajeContacto[] {
-  const datos = localStorage.getItem("mensajesContactoSanMarcos");
-
-  if (!datos) {
-    return [];
-  }
-
-  try {
-    const mensajes: unknown = JSON.parse(datos);
-    return Array.isArray(mensajes)
-      ? mensajes as MensajeContacto[]
-      : [];
-  } catch {
-    return [];
-  }
+interface ContactoApi {
+    id: number;
+    nombreCompleto: string;
+    correo: string;
+    correoCuenta: string | null;
+    mensaje: string;
+    fechaCreacion: string;
+    estado: string;
 }
 
-export function guardarMensajeContacto(
-  datos: Pick<
-    MensajeContacto,
-    "nombre" | "correo" | "comentario" | "correoCuenta"
-  >
-): void {
-  const mensajes = obtenerMensajesContacto();
+type NuevoMensaje = Pick<MensajeContacto, "nombre" | "correo" | "comentario" | "correoCuenta">;
 
-  const nuevoMensaje: MensajeContacto = {
-    id: "M" + Date.now() + Math.random().toString(36).slice(2, 8),
-    nombre: datos.nombre,
-    correo: datos.correo,
-    comentario: datos.comentario,
-    correoCuenta: datos.correoCuenta,
-    fechaEnvio: new Date().toISOString()
-  };
+const API_URL = "http://localhost:8084/api/contactos";
 
-  mensajes.push(nuevoMensaje);
+function convertirMensaje(contacto: ContactoApi): MensajeContacto {
+    return {
+        id: contacto.id,
+        nombre: contacto.nombreCompleto,
+        correo: contacto.correo,
+        comentario: contacto.mensaje,
+        correoCuenta: contacto.correoCuenta ?? "",
+        fechaEnvio: contacto.fechaCreacion,
+        estado: contacto.estado
+    };
+}
 
-  localStorage.setItem(
-    "mensajesContactoSanMarcos",
-    JSON.stringify(mensajes)
-  );
+export async function obtenerMensajesContacto(): Promise<MensajeContacto[]> {
+    const respuesta = await fetch(API_URL);
+
+    if (!respuesta.ok) {
+        throw new Error("No se pudieron obtener los mensajes.");
+    }
+
+    const contactos: ContactoApi[] = await respuesta.json();
+
+    return contactos.map(convertirMensaje);
+}
+
+export async function guardarMensajeContacto(datos: NuevoMensaje): Promise<MensajeContacto> {
+    const respuesta = await fetch(API_URL, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            nombreCompleto: datos.nombre,
+            correo: datos.correo,
+            mensaje: datos.comentario,
+            correoCuenta: datos.correoCuenta
+        })
+    });
+
+    if (!respuesta.ok) {
+        throw new Error("No se pudo guardar el mensaje.");
+    }
+
+    const contacto: ContactoApi = await respuesta.json();
+
+    return convertirMensaje(contacto);
+}
+
+export async function atenderMensajeContacto(id: number): Promise<MensajeContacto> {
+    const respuesta = await fetch(`${API_URL}/${id}`, {
+        method: "PUT"
+    });
+
+    if (!respuesta.ok) {
+        throw new Error("No se pudo actualizar el mensaje.");
+    }
+
+    const contacto: ContactoApi = await respuesta.json();
+
+    return convertirMensaje(contacto);
+}
+
+export async function eliminarMensajeContacto(id: number): Promise<void> {
+    const respuesta = await fetch(`${API_URL}/${id}`, {
+        method: "DELETE"
+    });
+
+    if (!respuesta.ok) {
+        throw new Error("No se pudo eliminar el mensaje.");
+    }
 }
