@@ -1,13 +1,12 @@
-import type { Cita } from "../../datos/citas";
-import { servicios } from "../../datos/servicios";
-import { obtenerDescripcionProfesional } from "../../datos/profesionales";
+import type {CitaServidor} from "../../datos/citasApi";
+import {servicios} from "../../datos/servicios";
+import {obtenerDescripcionProfesional} from "../../datos/profesionales";
 
 interface ListadoCitasProps {
-  citas: Cita[];
+  citas: CitaServidor[];
 }
 
-function ListadoCitas({ citas }: ListadoCitasProps) {
-
+function ListadoCitas({citas}: ListadoCitasProps) {
   if (citas.length === 0) {
     return (
       <p className="reserva-vacia">
@@ -19,17 +18,16 @@ function ListadoCitas({ citas }: ListadoCitasProps) {
   return (
     <div id="contenedor-citas">
       {[...citas].reverse().map((cita) => {
-
         const servicio = servicios.find(
           (item) => item.id === cita.servicio
         );
 
         return (
           <article className="cita-item" key={cita.id}>
-
             <h3>
               {servicio ? servicio.nombre : cita.servicio}
             </h3>
+
             <p>
               <strong>Profesional:</strong>{" "}
               {obtenerDescripcionProfesional(cita.profesional)}
@@ -56,7 +54,6 @@ function ListadoCitas({ citas }: ListadoCitasProps) {
                 {cita.fechaPropuesta} {cita.horaPropuesta}
               </p>
             )}
-
           </article>
         );
       })}

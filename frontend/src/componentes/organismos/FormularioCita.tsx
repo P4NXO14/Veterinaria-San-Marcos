@@ -1,59 +1,42 @@
-import { useEffect, useState } from "react";
-import type { FormEvent } from "react";
-
+import {useEffect,useState} from "react";
+import type {FormEvent} from "react";
 import Input from "../atomos/Input";
 import SelectorHorario from "./SelectorHorario";
-import { servicios } from "../../datos/servicios";
-import { obtenerHorasDisponibles } from "../../datos/horarios";
-import { crearCita } from "../../datos/citas";
-import type { Sesion } from "../../datos/usuarios";
-
+import {servicios} from "../../datos/servicios";
+import {obtenerHorasDisponibles} from "../../datos/horarios";
+import {crearCitaServidor} from "../../datos/citasApi";
+import type {Sesion} from "../../datos/usuarios";
 import {obtenerProfesionalesCompatibles} from "../../datos/compatibilidad";
-
 import {obtenerEspeciesPermitidas,esEspecieCompatible} from "../../datos/compatibilidadEspecies";
 
 interface FormularioCitaProps {
   sesion: Sesion;
-  onCitaCreada: () => void;
+  onCitaCreada: () => Promise<void>;
 }
 
-function FormularioCita({
-  sesion,
-  onCitaCreada
-}: FormularioCitaProps) {
-
-  const [servicio, setServicio] = useState(
-    () => sessionStorage.getItem("servicioCitaSanMarcos") || ""
-  );
-
-  const [profesional, setProfesional] = useState("");
-  const [mascota, setMascota] = useState("");
-  const [especie, setEspecie] = useState("");
-  const [motivo, setMotivo] = useState("");
-  const [fecha, setFecha] = useState("");
-  const [hora, setHora] = useState("");
-
-  const [mensaje, setMensaje] = useState("");
-  const [tipoMensaje, setTipoMensaje] = useState<"error" | "exito">("error");
+function FormularioCita({sesion,onCitaCreada}: FormularioCitaProps) {
+  const [servicio,setServicio] = useState(() => sessionStorage.getItem("servicioCitaSanMarcos") || "");
+  const [profesional,setProfesional] = useState("");
+  const [mascota,setMascota] = useState("");
+  const [especie,setEspecie] = useState("");
+  const [motivo,setMotivo] = useState("");
+  const [fecha,setFecha] = useState("");
+  const [hora,setHora] = useState("");
+  const [mensaje,setMensaje] = useState("");
+  const [tipoMensaje,setTipoMensaje] = useState<"error" | "exito">("error");
+  const [enviando,setEnviando] = useState(false);
 
   useEffect(() => {
     sessionStorage.removeItem("servicioCitaSanMarcos");
   }, []);
 
-  const servicioSeleccionado = servicios.find(
-    (item) => item.id === servicio
-  );
+  const servicioSeleccionado = servicios.find((item) => item.id === servicio);
+  const profesionalesPermitidos = obtenerProfesionalesCompatibles(servicio);
+  const especiesPermitidas = obtenerEspeciesPermitidas(servicio);
 
-  const profesionalesPermitidos =
-    obtenerProfesionalesCompatibles(servicio);
-    
-  const especiesPermitidas =
-    obtenerEspeciesPermitidas(servicio);
-
-  const horasDisponibles =
-    fecha && profesional && servicio
-      ? obtenerHorasDisponibles(fecha, profesional, servicio)
-      : [];
+  const horasDisponibles = fecha && profesional && servicio
+    ? obtenerHorasDisponibles(fecha,profesional,servicio)
+    : [];
 
   function mostrarError(texto: string) {
     setMensaje(texto);
@@ -87,8 +70,12 @@ function FormularioCita({
     setMensaje("");
   }
 
-  function enviarSolicitud(e: FormEvent<HTMLFormElement>) {
+  async function enviarSolicitud(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    if (enviando) {
+      return;
+    }
 
     if (sesion.rol !== "cliente") {
       mostrarError("Debes iniciar sesion como dueño de mascota");
@@ -100,10 +87,7 @@ function FormularioCita({
       return;
     }
 
-    if (
-      !profesional ||
-      !profesionalesPermitidos.some((item) => item.id === profesional)
-    ) {
+    if (!profesional || !profesionalesPermitidos.some((item) => item.id === profesional)) {
       mostrarError("Selecciona un profesional disponible para el servicio");
       return;
     }
@@ -118,10 +102,8 @@ function FormularioCita({
       return;
     }
 
-    if (!esEspecieCompatible(servicio, especie)) {
-      mostrarError(
-        "La especie de tu mascota no es compatible con el servicio seleccionado"
-      );
+    if (!esEspecieCompatible(servicio,especie)) {
+      mostrarError("La especie de tu mascota no es compatible con el servicio seleccionado");
       return;
     }
 
@@ -140,60 +122,50 @@ function FormularioCita({
       return;
     }
 
-    const disponibilidadActual = obtenerHorasDisponibles(
-      fecha,
-      profesional,
-      servicio
-    );
+    const disponibilidadActual = obtenerHorasDisponibles(fecha,profesional,servicio);
 
     if (!disponibilidadActual.includes(hora)) {
       setHora("");
-      mostrarError(
-        "La hora seleccionada ya no esta disponible. Selecciona otra"
-      );
+      mostrarError("La hora seleccionada ya no esta disponible. Selecciona otra");
       return;
     }
 
-    crearCita({
-      id: "C" + Date.now(),
-      propietario: sesion.correo,
-      propietarioNombre:
-        `${sesion.nombre} ${sesion.apellidos || ""}`.trim(),
-      servicio: servicio,
-      profesional: profesional,
-      mascota: mascota.trim(),
-      especie: especie,
-      motivo: motivo.trim(),
-      fecha: fecha,
-      hora: hora,
-      estado: "Pendiente",
-      fechaPropuesta: "",
-      horaPropuesta: ""
-    });
+    setEnviando(true);
+    setMensaje("");
 
-    setServicio("");
-    setProfesional("");
-    setMascota("");
-    setEspecie("");
-    setMotivo("");
-    setFecha("");
-    setHora("");
+    try {
+      await crearCitaServidor({
+        propietario: sesion.correo,
+        propietarioNombre: `${sesion.nombre} ${sesion.apellidos || ""}`.trim(),
+        servicio,
+        profesional,
+        mascota: mascota.trim(),
+        especie,
+        motivo: motivo.trim(),
+        fecha,
+        hora
+      });
 
-    setMensaje(
-      "Solicitud de cita enviada. Queda pendiente de confirmacion por recepcion"
-    );
-    setTipoMensaje("exito");
+      setServicio("");
+      setProfesional("");
+      setMascota("");
+      setEspecie("");
+      setMotivo("");
+      setFecha("");
+      setHora("");
+      setMensaje("Solicitud de cita enviada. Queda pendiente de confirmacion por recepcion");
+      setTipoMensaje("exito");
 
-    onCitaCreada();
+      await onCitaCreada();
+    } catch (error) {
+      mostrarError(error instanceof Error ? error.message : "No se pudo registrar la cita");
+    } finally {
+      setEnviando(false);
+    }
   }
 
   return (
-    <form
-      id="formCita"
-      className="formulario-vertical"
-      onSubmit={enviarSolicitud}
-      noValidate
-    >
+    <form id="formCita" className="formulario-vertical" onSubmit={enviarSolicitud} noValidate>
       <label htmlFor="citaServicio">Servicio:</label>
 
       <select
@@ -218,9 +190,7 @@ function FormularioCita({
         </p>
       )}
 
-      <label htmlFor="citaProfesional">
-        Profesional:
-      </label>
+      <label htmlFor="citaProfesional">Profesional:</label>
 
       <select
         id="citaProfesional"
@@ -238,9 +208,7 @@ function FormularioCita({
         ))}
       </select>
 
-      <label htmlFor="citaMascota">
-        Nombre de la mascota:
-      </label>
+      <label htmlFor="citaMascota">Nombre de la mascota:</label>
 
       <Input
         id="citaMascota"
@@ -261,7 +229,9 @@ function FormularioCita({
           setEspecie(e.target.value);
           setMensaje("");
         }}
-        disabled={!servicio || especiesPermitidas.length === 0}required>
+        disabled={!servicio || especiesPermitidas.length === 0}
+        required
+      >
         <option value="">Seleccione una especie</option>
 
         {especiesPermitidas.map((item) => (
@@ -294,8 +264,8 @@ function FormularioCita({
         />
       )}
 
-      <button type="submit" className="btn-principal">
-        Enviar solicitud
+      <button type="submit" className="btn-principal" disabled={enviando}>
+        {enviando ? "Enviando solicitud..." : "Enviar solicitud"}
       </button>
 
       {mensaje && (
