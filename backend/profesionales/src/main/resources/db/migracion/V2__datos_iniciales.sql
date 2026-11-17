@@ -1,0 +1,32 @@
+INSERT INTO profesional (codigo, nombre, tipo, especialidad) VALUES
+('VET001', 'Medico Veterinario 1', 'veterinario', 'Medicina general y preventiva'),
+('VET002', 'Medico Veterinario 2', 'veterinario', 'Cirugia y cuidados postoperatorios'),
+('VET003', 'Medico Veterinario 3', 'veterinario', 'Animales exoticos y diagnostico'),
+('TEC001', 'Tecnico Veterinario', 'tecnico', 'Enfermeria y apoyo clinico');
+
+INSERT INTO turno (profesional_id, dia_semana, inicio, fin) VALUES
+((SELECT id FROM profesional WHERE codigo = 'VET001'), 1, '08:30:00', '15:30:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET001'), 2, '08:30:00', '15:30:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET001'), 3, '08:30:00', '15:30:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET001'), 4, '08:30:00', '15:30:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET001'), 5, '08:30:00', '15:30:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET001'), 6, '10:00:00', '16:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET002'), 0, '10:00:00', '16:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET002'), 1, '14:00:00', '22:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET002'), 2, '14:00:00', '22:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET002'), 3, '14:00:00', '22:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET002'), 4, '14:00:00', '22:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET002'), 5, '14:00:00', '22:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 0, '14:00:00', '20:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 1, '10:00:00', '18:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 2, '12:00:00', '20:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 3, '10:00:00', '18:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 4, '12:00:00', '20:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 5, '10:00:00', '18:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'VET003'), 6, '14:00:00', '20:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'TEC001'), 1, '09:00:00', '17:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'TEC001'), 2, '09:00:00', '17:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'TEC001'), 3, '09:00:00', '17:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'TEC001'), 4, '09:00:00', '17:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'TEC001'), 5, '09:00:00', '17:00:00'),
+((SELECT id FROM profesional WHERE codigo = 'TEC001'), 6, '10:00:00', '14:00:00');
