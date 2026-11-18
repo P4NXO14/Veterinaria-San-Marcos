@@ -1,35 +1,60 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
-
-import { servicios } from "../datos/servicios";
-import type { Sesion } from "../datos/usuarios";
+import {useEffect,useState} from "react";
+import {Link,useNavigate,useParams} from "react-router-dom";
+import {obtenerServicioServidor} from "../datos/catalogoApi";
+import type {Servicio} from "../datos/servicios";
+import type {Sesion} from "../datos/usuarios";
 
 interface DetalleServicioProps {
   sesion: Sesion | null;
 }
 
-function DetalleServicio({ sesion }: DetalleServicioProps) {
-  const { id } = useParams<{ id: string }>();
+function DetalleServicio({sesion}: DetalleServicioProps) {
+  const {id} = useParams<{id: string}>();
   const navigate = useNavigate();
 
-  const servicio = servicios.find(
-    (item) => item.id === id
-  );
+  const [servicio,setServicio] = useState<Servicio | null>(null);
+  const [cargando,setCargando] = useState(true);
+  const [error,setError] = useState("");
 
-  if (!servicio) {
-    return (
-      <main className="contenedor-principal">
-        <h1>Servicio no encontrado</h1>
+  useEffect(() => {
+    let activo = true;
 
-        <p>
-          El servicio solicitado no existe en nuestro catalogo
-        </p>
+    if (!id) {
+      setServicio(null);
+      setError("Servicio no encontrado");
+      setCargando(false);
+      return;
+    }
 
-        <Link to="/servicios">
-          Volver al catalogo
-        </Link>
-      </main>
-    );
-  }
+    setServicio(null);
+    setCargando(true);
+    setError("");
+
+    obtenerServicioServidor(id)
+      .then((datos) => {
+        if (activo) {
+          setServicio(datos);
+        }
+      })
+      .catch((fallo: unknown) => {
+        if (activo) {
+          setError(
+            fallo instanceof Error
+              ? fallo.message
+              : "No se pudo consultar el servicio"
+          );
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargando(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  },[id]);
 
   function solicitarCita() {
     if (!servicio) {
@@ -52,38 +77,47 @@ function DetalleServicio({ sesion }: DetalleServicioProps) {
         return;
       }
 
-      sessionStorage.setItem(
-        "servicioCitaSanMarcos",
-        servicio.id
-      );
-
-      localStorage.setItem(
-        "destinoSanMarcos",
-        "/reserva"
-      );
-
+      sessionStorage.setItem("servicioCitaSanMarcos",servicio.id);
+      localStorage.setItem("destinoSanMarcos","/reserva");
       navigate("/login");
       return;
     }
 
     if (sesion.rol !== "cliente") {
-      window.alert(
-        "Solo los clientes pueden solicitar citas"
-      );
+      window.alert("Solo los clientes pueden solicitar citas");
       return;
     }
 
-    sessionStorage.setItem(
-      "servicioCitaSanMarcos",
-      servicio.id
-    );
-
+    sessionStorage.setItem("servicioCitaSanMarcos",servicio.id);
     navigate("/reserva");
+  }
+
+  if (cargando) {
+    return (
+      <main className="detalle-servicio-pagina">
+        <p role="status">Cargando informacion del servicio</p>
+      </main>
+    );
+  }
+
+  if (!servicio) {
+    return (
+      <main className="contenedor-principal">
+        <h1>Servicio no encontrado</h1>
+
+        <p role="alert">
+          {error || "El servicio solicitado no existe en nuestro catalogo"}
+        </p>
+
+        <Link to="/servicios">
+          Volver al catalogo
+        </Link>
+      </main>
+    );
   }
 
   return (
     <main className="detalle-servicio-pagina">
-
       <Link
         to="/servicios"
         className="detalle-volver"
@@ -92,7 +126,6 @@ function DetalleServicio({ sesion }: DetalleServicioProps) {
       </Link>
 
       <article className="detalle-servicio-contenido">
-
         <div className="detalle-servicio-imagen">
           <img
             src={servicio.imagen}
@@ -101,7 +134,6 @@ function DetalleServicio({ sesion }: DetalleServicioProps) {
         </div>
 
         <div className="detalle-servicio-informacion">
-
           <span className="detalle-servicio-categoria">
             {servicio.categoria}
           </span>
@@ -135,11 +167,8 @@ function DetalleServicio({ sesion }: DetalleServicioProps) {
           >
             Solicitar Cita
           </button>
-
         </div>
-
       </article>
-
     </main>
   );
 }

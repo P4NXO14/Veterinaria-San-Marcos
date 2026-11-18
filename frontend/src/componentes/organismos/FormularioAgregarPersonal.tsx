@@ -1,33 +1,36 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-
+import {useState} from "react";
+import type {FormEvent} from "react";
 import CampoFormulario from "../moleculas/CampoFormulario";
-import { validarRUT } from "../../datos/validacionesRut";
-import { validarCorreoPorRol } from "../../datos/validacionesCorreo";
-import { obtenerUsuarios } from "../../datos/usuarios";
-import type { DatosNuevoPersonal } from "../../datos/usuarios";
+import {validarRUT} from "../../datos/validacionesRut";
+import {validarCorreoPorRol} from "../../datos/validacionesCorreo";
+import type {DatosNuevoPersonal} from "../../datos/usuarios";
 
 interface FormularioAgregarPersonalProps {
   onGuardar: (datos: DatosNuevoPersonal) => void;
   onCancelar: () => void;
+  procesando: boolean;
 }
 
 function FormularioAgregarPersonal({
   onGuardar,
-  onCancelar
+  onCancelar,
+  procesando
 }: FormularioAgregarPersonalProps) {
+  const [rut,setRut] = useState("");
+  const [nombre,setNombre] = useState("");
+  const [apellidos,setApellidos] = useState("");
+  const [correo,setCorreo] = useState("");
+  const [direccion,setDireccion] = useState("");
+  const [password,setPassword] = useState("");
+  const [confirmarPassword,setConfirmarPassword] = useState("");
+  const [mensaje,setMensaje] = useState("");
 
-  const [rut, setRut] = useState("");
-  const [nombre, setNombre] = useState("");
-  const [apellidos, setApellidos] = useState("");
-  const [correo, setCorreo] = useState("");
-  const [direccion, setDireccion] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmarPassword, setConfirmarPassword] = useState("");
-  const [mensaje, setMensaje] = useState("");
+  function guardarPersonal(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
 
-  function guardarPersonal(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+    if (procesando) {
+      return;
+    }
 
     const rutLimpio = rut.trim().toUpperCase();
     const nombreLimpio = nombre.trim();
@@ -37,24 +40,6 @@ function FormularioAgregarPersonal({
 
     if (!validarRUT(rutLimpio)) {
       setMensaje("Ingresa un RUN valido sin puntos ni guion");
-      return;
-    }
-
-    const usuarioExistente = obtenerUsuarios().find(
-      (usuario) => usuario.rut.trim().toUpperCase() === rutLimpio
-    );
-
-    if (usuarioExistente) {
-      const tipoCuenta =
-        usuarioExistente.rol === "cliente"
-          ? "cliente"
-          : usuarioExistente.rol === "recepcionista"
-            ? "personal"
-            : "administrador";
-
-      setMensaje(
-        `Error: Este RUN ya esta registrado en una cuenta de ${tipoCuenta}`
-      );
       return;
     }
 
@@ -68,15 +53,15 @@ function FormularioAgregarPersonal({
       return;
     }
 
-    if (!validarCorreoPorRol(correoLimpio, "recepcionista")) {
+    if (!validarCorreoPorRol(correoLimpio,"recepcionista")) {
       setMensaje(
         "El correo debe ser @sanmarcos.com y no puede ser el del administrador"
       );
       return;
     }
 
-    if (!direccionLimpia || direccionLimpia.length > 300) {
-      setMensaje("Ingresa una direccion valida de hasta 300 caracteres");
+    if (!direccionLimpia || direccionLimpia.length > 255) {
+      setMensaje("Ingresa una direccion valida de hasta 255 caracteres");
       return;
     }
 
@@ -159,7 +144,7 @@ function FormularioAgregarPersonal({
           tipo="text"
           valor={direccion}
           onChange={setDireccion}
-          maxLength={300}
+          maxLength={255}
         />
 
         <CampoFormulario
@@ -191,13 +176,18 @@ function FormularioAgregarPersonal({
         )}
 
         <div className="d-flex gap-2">
-          <button type="submit" className="btn btn-primary">
-            Guardar personal
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={procesando}
+          >
+            {procesando ? "Guardando personal" : "Guardar personal"}
           </button>
 
           <button
             type="button"
             className="btn btn-secondary"
+            disabled={procesando}
             onClick={onCancelar}
           >
             Cancelar

@@ -1,4 +1,5 @@
-import { servicios } from "./servicios";
+import {servicios as serviciosLocales} from "./servicios";
+import type {Servicio} from "./servicios";
 
 export const ESPECIES_MASCOTAS = [
   "Perro",
@@ -10,7 +11,7 @@ export const ESPECIES_MASCOTAS = [
 export type EspecieMascota =
   (typeof ESPECIES_MASCOTAS)[number];
 
-const equivalencias: Record<string, EspecieMascota> = {
+const equivalencias: Record<string,EspecieMascota> = {
   Perro: "Perro",
   Perra: "Perro",
   Gato: "Gato",
@@ -20,10 +21,10 @@ const equivalencias: Record<string, EspecieMascota> = {
 };
 
 export function obtenerEspeciesPermitidas(
-  servicioId: string
+  servicioId: string,
+  catalogo: Servicio[] = serviciosLocales
 ): EspecieMascota[] {
-
-  const servicio = servicios.find(
+  const servicio = catalogo.find(
     (item) => item.id === servicioId
   );
 
@@ -50,10 +51,10 @@ export function obtenerEspeciesPermitidas(
 
 export function esEspecieCompatible(
   servicioId: string,
-  especie: string
+  especie: string,
+  catalogo: Servicio[] = serviciosLocales
 ): boolean {
-
-  return obtenerEspeciesPermitidas(servicioId).some(
+  return obtenerEspeciesPermitidas(servicioId,catalogo).some(
     (permitida) => permitida === especie
   );
 }

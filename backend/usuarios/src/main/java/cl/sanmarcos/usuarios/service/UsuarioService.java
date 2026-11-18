@@ -218,8 +218,8 @@ public class UsuarioService {
     }
 
     private void validarPassword(String password) {
-        if (password == null || password.length() != 8) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña debe tener exactamente 8 caracteres");
+        if (password == null || password.length() < 4 || password.length() > 10) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La contraseña debe tener entre 4 y 10 caracteres");
         }
     }
 }

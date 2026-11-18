@@ -207,8 +207,7 @@ public class DisponibilidadService {
                 continue;
             }
 
-            if ("Cancelada".equalsIgnoreCase(ocupada.getEstado())
-                || "Rechazada".equalsIgnoreCase(ocupada.getEstado())) {
+            if ("Cancelada".equalsIgnoreCase(ocupada.getEstado())) {
                 continue;
             }
 

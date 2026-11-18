@@ -3,7 +3,10 @@ import {Link} from "react-router-dom";
 import FormularioCita from "../componentes/organismos/FormularioCita";
 import ListadoCitas from "../componentes/organismos/ListadoCitas";
 import {obtenerCitasServidor} from "../datos/citasApi";
+import {obtenerProfesionalesServidor,obtenerServiciosServidor} from "../datos/catalogoApi";
 import type {CitaServidor} from "../datos/citasApi";
+import type {Servicio} from "../datos/servicios";
+import type {Profesional} from "../datos/profesionales";
 import type {Sesion} from "../datos/usuarios";
 
 interface ReservaProps {
@@ -12,8 +15,11 @@ interface ReservaProps {
 
 function Reserva({sesion}: ReservaProps) {
   const [citas,setCitas] = useState<CitaServidor[]>([]);
+  const [servicios,setServicios] = useState<Servicio[]>([]);
+  const [profesionales,setProfesionales] = useState<Profesional[]>([]);
   const [cargando,setCargando] = useState(false);
   const [error,setError] = useState("");
+  const [errorCatalogo,setErrorCatalogo] = useState("");
 
   const correo = sesion?.rol === "cliente" ? sesion.correo : null;
 
@@ -37,11 +43,11 @@ function Reserva({sesion}: ReservaProps) {
           setCitas(datos);
         }
       })
-      .catch((error: unknown) => {
+      .catch((fallo: unknown) => {
         if (activo) {
           setError(
-            error instanceof Error
-              ? error.message
+            fallo instanceof Error
+              ? fallo.message
               : "No se pudieron cargar las citas"
           );
         }
@@ -55,7 +61,40 @@ function Reserva({sesion}: ReservaProps) {
     return () => {
       activo = false;
     };
-  }, [correo]);
+  },[correo]);
+
+  useEffect(() => {
+    if (!correo) {
+      return;
+    }
+
+    let activo = true;
+
+    Promise.all([
+      obtenerServiciosServidor(),
+      obtenerProfesionalesServidor()
+    ])
+      .then(([datosServicios,datosProfesionales]) => {
+        if (activo) {
+          setServicios(datosServicios);
+          setProfesionales(datosProfesionales);
+          setErrorCatalogo("");
+        }
+      })
+      .catch((fallo: unknown) => {
+        if (activo) {
+          setErrorCatalogo(
+            fallo instanceof Error
+              ? fallo.message
+              : "No se pudo consultar la informacion de Servicios y Profesionales"
+          );
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  },[correo]);
 
   async function actualizarCitas() {
     if (!correo) {
@@ -66,10 +105,10 @@ function Reserva({sesion}: ReservaProps) {
       const datos = await obtenerCitasServidor(correo);
       setCitas(datos);
       setError("");
-    } catch (error) {
+    } catch (fallo) {
       setError(
-        error instanceof Error
-          ? error.message
+        fallo instanceof Error
+          ? fallo.message
           : "No se pudieron actualizar las citas"
       );
     }
@@ -81,13 +120,13 @@ function Reserva({sesion}: ReservaProps) {
         <h1>Mis Citas</h1>
 
         <p>
-          Debes iniciar sesion para solicitar y consultar tus citas.
+          Debes iniciar sesion para solicitar y consultar tus citas
         </p>
 
         <Link
           to="/login"
           onClick={() => {
-            localStorage.setItem("destinoSanMarcos", "/reserva");
+            localStorage.setItem("destinoSanMarcos","/reserva");
           }}
         >
           Iniciar Sesion
@@ -102,7 +141,7 @@ function Reserva({sesion}: ReservaProps) {
         <h1>Acceso restringido</h1>
 
         <p>
-          Esta seccion esta disponible solamente para dueños de mascotas.
+          Esta seccion esta disponible solamente para dueños de mascotas
         </p>
       </main>
     );
@@ -114,8 +153,8 @@ function Reserva({sesion}: ReservaProps) {
         <h1>Solicitar Cita</h1>
 
         <p>
-          El dueño de mascota crea una solicitud.
-          La recepcionista puede confirmarla o proponer otro horario.
+          El dueño de mascota crea una solicitud
+          La recepcionista puede confirmarla o proponer otro horario
         </p>
 
         <FormularioCita
@@ -128,20 +167,29 @@ function Reserva({sesion}: ReservaProps) {
         <h2>Estado de mis citas</h2>
 
         {cargando && (
-          <p role="status">Cargando citas...</p>
+          <p role="status">
+            Cargando citas
+          </p>
         )}
 
         {error && (
-          <p
-            className="mensaje-formulario mensaje-error"
-            role="alert"
-          >
+          <p className="mensaje-formulario mensaje-error" role="alert">
             {error}
           </p>
         )}
 
+        {errorCatalogo && (
+          <p className="mensaje-formulario mensaje-error" role="alert">
+            {errorCatalogo}
+          </p>
+        )}
+
         {!cargando && !error && (
-          <ListadoCitas citas={citas} />
+          <ListadoCitas
+            citas={citas}
+            servicios={servicios}
+            profesionales={profesionales}
+          />
         )}
       </section>
     </main>

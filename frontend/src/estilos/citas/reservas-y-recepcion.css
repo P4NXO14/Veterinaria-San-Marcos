@@ -8,8 +8,6 @@
     margin-top: 30px;
 }
 
-/* Campos del formulario */
-
 .formulario-vertical select,
 .formulario-vertical textarea {
     width: 100%;
@@ -21,8 +19,6 @@
 .formulario-vertical textarea {
     resize: none;
 }
-
-/* Listado de citas */
 
 .cita-item {
     background-color: white;
@@ -36,6 +32,11 @@
     margin: 6px 0;
 }
 
+.cita-item > .mensaje-formulario {
+    margin-top: 24px;
+    margin-bottom: 12px;
+}
+
 .estado-cita {
     font-weight: bold;
 }
@@ -43,8 +44,6 @@
 .reserva-vacia {
     color: #c0392b;
 }
-
-/* Gestion de citas */
 
 .contenedor-tabla {
     max-width: 1000px;
@@ -91,8 +90,54 @@
     border-radius: 4px;
 }
 
+.acciones-propuesta > button {
+    width: 190px;
+    min-height: 44px;
+}
+
+.contacto-consultas {
+    margin-top: 48px;
+}
+
+.contacto-consultas > p {
+    margin-bottom: 20px;
+}
+
+.contacto-consultas-autorizacion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.contacto-consultas-autorizacion input {
+    width: 100%;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+}
+
+.contacto-consultas-autorizacion button {
+    min-height: 44px;
+}
+
+.contacto-consultas .cita-item {
+    margin-top: 18px;
+}
+
 @media (max-width: 767px) {
     .acciones-cita {
         flex-direction: column;
+    }
+
+    .acciones-propuesta > button {
+        width: 100%;
+    }
+
+    .contacto-consultas-autorizacion button {
+        width: 100%;
     }
 }

@@ -36,6 +36,15 @@ public class Contacto {
     @Column(name = "fecha_creacion", nullable = false, updatable = false)
     private LocalDateTime fechaCreacion;
 
+    @Column(name = "respuesta", columnDefinition = "TEXT")
+    private String respuesta;
+
+    @Column(name = "respondido_por", length = 150)
+    private String respondidoPor;
+
+    @Column(name = "fecha_respuesta")
+    private LocalDateTime fechaRespuesta;
+
     @PrePersist
     protected void asignarFechaCreacion() {
         this.fechaCreacion = LocalDateTime.now();

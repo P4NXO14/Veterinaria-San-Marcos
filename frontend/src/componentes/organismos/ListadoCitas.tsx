@@ -1,16 +1,22 @@
 import type {CitaServidor} from "../../datos/citasApi";
-import {servicios} from "../../datos/servicios";
-import {obtenerDescripcionProfesional} from "../../datos/profesionales";
+import type {Servicio} from "../../datos/servicios";
+import type {Profesional} from "../../datos/profesionales";
 
 interface ListadoCitasProps {
   citas: CitaServidor[];
+  servicios?: Servicio[];
+  profesionales?: Profesional[];
 }
 
-function ListadoCitas({citas}: ListadoCitasProps) {
+function ListadoCitas({
+  citas,
+  servicios = [],
+  profesionales = []
+}: ListadoCitasProps) {
   if (citas.length === 0) {
     return (
       <p className="reserva-vacia">
-        Aun no tienes solicitudes de cita.
+        Aun no tienes solicitudes de cita
       </p>
     );
   }
@@ -22,6 +28,14 @@ function ListadoCitas({citas}: ListadoCitasProps) {
           (item) => item.id === cita.servicio
         );
 
+        const profesional = profesionales.find(
+          (item) => item.id === cita.profesional
+        );
+
+        const descripcionProfesional = profesional
+          ? `${profesional.nombre} - ${profesional.especialidad}`
+          : cita.profesional || "Sin profesional asignado";
+
         return (
           <article className="cita-item" key={cita.id}>
             <h3>
@@ -30,15 +44,17 @@ function ListadoCitas({citas}: ListadoCitasProps) {
 
             <p>
               <strong>Profesional:</strong>{" "}
-              {obtenerDescripcionProfesional(cita.profesional)}
+              {descripcionProfesional}
             </p>
 
             <p>
-              <strong>Mascota:</strong> {cita.mascota} ({cita.especie})
+              <strong>Mascota:</strong>{" "}
+              {cita.mascota} ({cita.especie})
             </p>
 
             <p>
-              <strong>Solicitado:</strong> {cita.fecha} {cita.hora}
+              <strong>Solicitado:</strong>{" "}
+              {cita.fecha} {cita.hora}
             </p>
 
             <p>

@@ -39,37 +39,37 @@ function FormularioRegistro() {
         const direccionLimpia = direccion.trim();
 
         if (!validarRUT(rutLimpio)) {
-            mostrarError("Error: El RUN no es valido. Ingresalo sin puntos ni guion.");
+            mostrarError("Error: El RUN no es valido. Ingresalo sin puntos ni guion");
             return;
         }
 
         if (nombreLimpio === "" || nombreLimpio.length > 50) {
-            mostrarError("Error: El nombre es obligatorio y admite hasta 50 caracteres.");
+            mostrarError("Error: El nombre es obligatorio y admite hasta 50 caracteres");
             return;
         }
 
         if (apellidosLimpios === "" || apellidosLimpios.length > 100) {
-            mostrarError("Error: Los apellidos son obligatorios y admiten hasta 100 caracteres.");
+            mostrarError("Error: Los apellidos son obligatorios y admiten hasta 100 caracteres");
             return;
         }
 
         if (!validarCorreoPorRol(correoLimpio, "cliente")) {
-            mostrarError("Error: Debes utilizar un correo @gmail.com o @hotmail.com valido.");
+            mostrarError("Error: Debes utilizar un correo @gmail.com o @hotmail.com valido");
             return;
         }
 
         if (direccionLimpia === "" || direccionLimpia.length > 300) {
-            mostrarError("Error: La direccion es obligatoria y admite hasta 300 caracteres.");
+            mostrarError("Error: La direccion es obligatoria y admite hasta 300 caracteres");
             return;
         }
 
         if (password.length < 4 || password.length > 10) {
-            mostrarError("Error: La contraseña debe tener entre 4 y 10 caracteres.");
+            mostrarError("Error: La contraseña debe tener entre 4 y 10 caracteres");
             return;
         }
 
         if (password !== confirmarPassword) {
-            mostrarError("Error: Las contraseñas no coinciden.");
+            mostrarError("Error: Las contraseñas no coinciden");
             return;
         }
 
@@ -86,7 +86,7 @@ function FormularioRegistro() {
                 password
             });
 
-            setMensaje("Usuario registrado correctamente. Ahora puedes iniciar sesion.");
+            setMensaje("Usuario registrado correctamente. Ahora puedes iniciar sesion");
             setTipoMensaje("exito");
             setRut("");
             setNombre("");
@@ -100,7 +100,7 @@ function FormularioRegistro() {
                 navigate("/login");
             }, 1200);
         } catch (error) {
-            mostrarError(error instanceof Error ? error.message : "Error al registrar usuario.");
+            mostrarError(error instanceof Error ? error.message : "Error al registrar usuario");
         } finally {
             setRegistrando(false);
         }

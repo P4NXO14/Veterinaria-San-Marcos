@@ -1,16 +1,23 @@
-import { profesionales } from "./profesionales";
-import { servicios } from "./servicios";
-import { obtenerCitas } from "./citas";
-import type { Cita } from "./citas";
+import {profesionales as profesionalesLocales} from "./profesionales";
+import {servicios as serviciosLocales} from "./servicios";
+import {obtenerCitas} from "./citas";
 import {esProfesionalCompatible} from "./compatibilidad";
+import type {Cita} from "./citas";
+import type {Servicio} from "./servicios";
+import type {Profesional} from "./profesionales";
+
+export interface CatalogoHorarios {
+  servicios: Servicio[];
+  profesionales: Profesional[];
+  compatibles: string[];
+}
 
 function convertirAMinutos(hora: string): number | null {
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(hora)) {
     return null;
   }
 
-  const [horas, minutos] = hora.split(":").map(Number);
-
+  const [horas,minutos] = hora.split(":").map(Number);
   return horas * 60 + minutos;
 }
 
@@ -18,15 +25,14 @@ function convertirAHora(minutos: number): string {
   const horas = Math.floor(minutos / 60);
   const resto = minutos % 60;
 
-  return `${String(horas).padStart(2, "0")}:${String(resto).padStart(2, "0")}`;
+  return `${String(horas).padStart(2,"0")}:${String(resto).padStart(2,"0")}`;
 }
 
 function obtenerFechaActual(): string {
   const hoy = new Date();
-
   const año = hoy.getFullYear();
-  const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-  const dia = String(hoy.getDate()).padStart(2, "0");
+  const mes = String(hoy.getMonth() + 1).padStart(2,"0");
+  const dia = String(hoy.getDate()).padStart(2,"0");
 
   return `${año}-${mes}-${dia}`;
 }
@@ -36,8 +42,8 @@ function convertirFecha(fecha: string): Date | null {
     return null;
   }
 
-  const [año, mes, dia] = fecha.split("-").map(Number);
-  const resultado = new Date(año, mes - 1, dia);
+  const [año,mes,dia] = fecha.split("-").map(Number);
+  const resultado = new Date(año,mes - 1,dia);
 
   if (
     resultado.getFullYear() !== año ||
@@ -50,9 +56,7 @@ function convertirFecha(fecha: string): Date | null {
   return resultado;
 }
 
-export function obtenerDuracionMinutos(
-  duracion: string
-): number | null {
+export function obtenerDuracionMinutos(duracion: string): number | null {
   const minutos = duracion.match(/^(\d+)\s*min$/i);
 
   if (minutos) {
@@ -72,14 +76,17 @@ export function obtenerHorasDisponibles(
   fecha: string,
   profesionalId: string,
   servicioId: string,
-  citas: Cita[] = obtenerCitas()
+  citas: Cita[] = obtenerCitas(),
+  catalogo?: CatalogoHorarios
 ): string[] {
-
   const fechaElegida = convertirFecha(fecha);
 
   if (!fechaElegida || fecha < obtenerFechaActual()) {
     return [];
   }
+
+  const profesionales = catalogo?.profesionales ?? profesionalesLocales;
+  const servicios = catalogo?.servicios ?? serviciosLocales;
 
   const profesional = profesionales.find(
     (item) => item.id === profesionalId
@@ -93,9 +100,11 @@ export function obtenerHorasDisponibles(
     return [];
   }
 
-  if (!esProfesionalCompatible(
-    servicioId,
-    profesionalId)){
+  const esCompatible = catalogo
+    ? catalogo.compatibles.includes(profesionalId)
+    : esProfesionalCompatible(servicioId,profesionalId);
+
+  if (!esCompatible) {
     return [];
   }
 
@@ -113,7 +122,6 @@ export function obtenerHorasDisponibles(
   }
 
   const esFinDeSemana = diaSemana === 0 || diaSemana === 6;
-
   const apertura = esFinDeSemana ? "10:00" : "08:30";
   const cierre = esFinDeSemana ? "20:00" : "22:00";
 
@@ -131,17 +139,12 @@ export function obtenerHorasDisponibles(
     return [];
   }
 
-  const inicio = Math.max(inicioTurno, inicioClinica);
-  const fin = Math.min(finTurno, finClinica);
-
-  const ocupaciones: Array<{ inicio: number; fin: number }> = [];
+  const inicio = Math.max(inicioTurno,inicioClinica);
+  const fin = Math.min(finTurno,finClinica);
+  const ocupaciones: Array<{inicio: number;fin: number}> = [];
 
   for (const cita of citas) {
-    if (cita.profesional !== profesionalId) {
-      continue;
-    }
-
-    if (cita.estado === "Cancelada" || cita.estado === "Rechazada") {
+    if (cita.profesional !== profesionalId || cita.estado === "Cancelada") {
       continue;
     }
 
@@ -154,7 +157,7 @@ export function obtenerHorasDisponibles(
       : null;
 
     const fechasOcupadas = [
-      { fecha: cita.fecha, hora: cita.hora }
+      {fecha: cita.fecha,hora: cita.hora}
     ];
 
     if (cita.fechaPropuesta && cita.horaPropuesta) {
@@ -172,7 +175,7 @@ export function obtenerHorasDisponibles(
       const inicioOcupado = convertirAMinutos(ocupacion.hora);
 
       if (inicioOcupado === null || duracionOcupada === null) {
-        ocupaciones.push({ inicio: 0, fin: 1440 });
+        ocupaciones.push({inicio: 0,fin: 1440});
         continue;
       }
 
@@ -185,7 +188,6 @@ export function obtenerHorasDisponibles(
 
   const horasDisponibles: string[] = [];
   const intervalo = 30;
-
   const primerHorario = Math.ceil(inicio / intervalo) * intervalo;
   const hoy = new Date();
 
@@ -194,7 +196,6 @@ export function obtenerHorasDisponibles(
     minutos + duracion <= fin;
     minutos += intervalo
   ) {
-
     if (fecha === obtenerFechaActual()) {
       const minutosActuales =
         hoy.getHours() * 60 + hoy.getMinutes();

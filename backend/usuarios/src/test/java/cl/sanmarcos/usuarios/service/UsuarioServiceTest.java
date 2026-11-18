@@ -100,14 +100,37 @@ class UsuarioServiceTest {
     }
 
     @Test
-    void rechazarPasswordDistintaDeOchoCaracteres() {
+    void aceptarPasswordDeCuatroCaracteresEnCliente() {
         RegistroRequest datos = new RegistroRequest(
-            "111111111",
-            "Juan",
-            "Perez",
-            "juan@gmail.com",
-            "Santiago",
-            "Clave12345"
+            "111111111","Juan","Perez","juan@gmail.com","Santiago","Ab12"
+        );
+
+        when(repository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Usuario usuario = service.registrar(datos);
+
+        assertTrue(new BCryptPasswordEncoder().matches("Ab12",usuario.getPasswordHash()));
+        verify(repository).save(any(Usuario.class));
+    }
+
+    @Test
+    void aceptarPasswordDeDiezCaracteresEnCliente() {
+        RegistroRequest datos = new RegistroRequest(
+            "111111111","Juan","Perez","juan@gmail.com","Santiago","Clave12345"
+        );
+
+        when(repository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Usuario usuario = service.registrar(datos);
+
+        assertTrue(new BCryptPasswordEncoder().matches("Clave12345",usuario.getPasswordHash()));
+        verify(repository).save(any(Usuario.class));
+    }
+
+    @Test
+    void rechazarPasswordDeTresCaracteresEnCliente() {
+        RegistroRequest datos = new RegistroRequest(
+            "111111111","Juan","Perez","juan@gmail.com","Santiago","Ab1"
         );
 
         ResponseStatusException error = assertThrows(
@@ -115,8 +138,81 @@ class UsuarioServiceTest {
             () -> service.registrar(datos)
         );
 
-        assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
-        verify(repository, never()).save(any(Usuario.class));
+        assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
+    }
+
+    @Test
+    void rechazarPasswordDeOnceCaracteresEnCliente() {
+        RegistroRequest datos = new RegistroRequest(
+            "111111111","Juan","Perez","juan@gmail.com","Santiago","Clave123456"
+        );
+
+        ResponseStatusException error = assertThrows(
+            ResponseStatusException.class,
+            () -> service.registrar(datos)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
+    }
+
+    @Test
+    void aceptarPasswordDeCuatroCaracteresEnPersonal() {
+        PersonalRequest datos = new PersonalRequest(
+            "111111111","Maria","Lopez","personal@sanmarcos.com","Santiago","Ab12"
+        );
+
+        when(repository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Usuario usuario = service.crearPersonal(datos);
+
+        assertTrue(new BCryptPasswordEncoder().matches("Ab12",usuario.getPasswordHash()));
+        verify(repository).save(any(Usuario.class));
+    }
+
+    @Test
+    void aceptarPasswordDeDiezCaracteresEnPersonal() {
+        PersonalRequest datos = new PersonalRequest(
+            "111111111","Maria","Lopez","personal@sanmarcos.com","Santiago","Clave12345"
+        );
+
+        when(repository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
+
+        Usuario usuario = service.crearPersonal(datos);
+
+        assertTrue(new BCryptPasswordEncoder().matches("Clave12345",usuario.getPasswordHash()));
+        verify(repository).save(any(Usuario.class));
+    }
+
+    @Test
+    void rechazarPasswordDeTresCaracteresEnPersonal() {
+        PersonalRequest datos = new PersonalRequest(
+            "111111111","Maria","Lopez","personal@sanmarcos.com","Santiago","Ab1"
+        );
+
+        ResponseStatusException error = assertThrows(
+            ResponseStatusException.class,
+            () -> service.crearPersonal(datos)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
+    }
+
+    @Test
+    void rechazarPasswordDeOnceCaracteresEnPersonal() {
+        PersonalRequest datos = new PersonalRequest(
+            "111111111","Maria","Lopez","personal@sanmarcos.com","Santiago","Clave123456"
+        );
+
+        ResponseStatusException error = assertThrows(
+            ResponseStatusException.class,
+            () -> service.crearPersonal(datos)
+        );
+
+        assertEquals(HttpStatus.BAD_REQUEST,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
     }
 
     @Test
@@ -128,8 +224,8 @@ class UsuarioServiceTest {
             () -> service.registrar(registro)
         );
 
-        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
-        verify(repository, never()).save(any(Usuario.class));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
     }
 
     @Test
@@ -141,8 +237,8 @@ class UsuarioServiceTest {
             () -> service.registrar(registro)
         );
 
-        assertEquals(HttpStatus.CONFLICT, error.getStatusCode());
-        verify(repository, never()).save(any(Usuario.class));
+        assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
     }
 
     @Test
@@ -150,10 +246,10 @@ class UsuarioServiceTest {
         Usuario usuario = crearUsuario();
         when(repository.findByCorreo("juan@gmail.com")).thenReturn(Optional.of(usuario));
 
-        Usuario resultado = service.iniciarSesion(new LoginRequest("juan@gmail.com", "Clave123"));
+        Usuario resultado = service.iniciarSesion(new LoginRequest("juan@gmail.com","Clave123"));
 
-        assertEquals("juan@gmail.com", resultado.getCorreo());
-        assertEquals("cliente", resultado.getRol());
+        assertEquals("juan@gmail.com",resultado.getCorreo());
+        assertEquals("cliente",resultado.getRol());
     }
 
     @Test
@@ -163,10 +259,10 @@ class UsuarioServiceTest {
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
-            () -> service.iniciarSesion(new LoginRequest("juan@gmail.com", "Incorrecta"))
+            () -> service.iniciarSesion(new LoginRequest("juan@gmail.com","Incorrecta"))
         );
 
-        assertEquals(HttpStatus.UNAUTHORIZED, error.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED,error.getStatusCode());
     }
 
     @Test
@@ -175,10 +271,10 @@ class UsuarioServiceTest {
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
-            () -> service.iniciarSesion(new LoginRequest("desconocido@gmail.com", "Clave123"))
+            () -> service.iniciarSesion(new LoginRequest("desconocido@gmail.com","Clave123"))
         );
 
-        assertEquals(HttpStatus.UNAUTHORIZED, error.getStatusCode());
+        assertEquals(HttpStatus.UNAUTHORIZED,error.getStatusCode());
     }
 
     @Test
@@ -190,10 +286,10 @@ class UsuarioServiceTest {
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
-            () -> service.iniciarSesion(new LoginRequest("juan@gmail.com", "Clave123"))
+            () -> service.iniciarSesion(new LoginRequest("juan@gmail.com","Clave123"))
         );
 
-        assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
+        assertEquals(HttpStatus.FORBIDDEN,error.getStatusCode());
     }
 
     @Test
@@ -211,10 +307,10 @@ class UsuarioServiceTest {
 
         Usuario usuario = service.crearPersonal(datos);
 
-        assertEquals("recepcionista", usuario.getRol());
-        assertEquals("personal@sanmarcos.com", usuario.getCorreo());
+        assertEquals("recepcionista",usuario.getRol());
+        assertEquals("personal@sanmarcos.com",usuario.getCorreo());
         assertTrue(usuario.getActivo());
-        assertTrue(new BCryptPasswordEncoder().matches("Clave123", usuario.getPasswordHash()));
+        assertTrue(new BCryptPasswordEncoder().matches("Clave123",usuario.getPasswordHash()));
 
         verify(repository).save(any(Usuario.class));
     }
@@ -231,13 +327,13 @@ class UsuarioServiceTest {
             "Valparaiso"
         );
 
-        Usuario resultado = service.editarPersonal(3L, datos);
+        Usuario resultado = service.editarPersonal(3L,datos);
 
-        assertEquals(3L, resultado.getId());
-        assertEquals("Maria Elena", resultado.getNombre());
-        assertEquals("Lopez Soto", resultado.getApellidos());
-        assertEquals("Valparaiso", resultado.getDireccion());
-        assertEquals("personal@sanmarcos.com", resultado.getCorreo());
+        assertEquals(3L,resultado.getId());
+        assertEquals("Maria Elena",resultado.getNombre());
+        assertEquals("Lopez Soto",resultado.getApellidos());
+        assertEquals("Valparaiso",resultado.getDireccion());
+        assertEquals("personal@sanmarcos.com",resultado.getCorreo());
 
         verify(repository).findById(3L);
         verify(repository).save(usuario);
@@ -251,7 +347,7 @@ class UsuarioServiceTest {
         when(repository.findById(3L)).thenReturn(Optional.of(usuario));
         when(repository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
 
-        Usuario resultado = service.cambiarEstado(3L, true);
+        Usuario resultado = service.cambiarEstado(3L,true);
 
         assertTrue(resultado.getActivo());
         verify(repository).save(usuario);
@@ -263,7 +359,7 @@ class UsuarioServiceTest {
         when(repository.findById(3L)).thenReturn(Optional.of(usuario));
         when(repository.save(any(Usuario.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
 
-        Usuario resultado = service.cambiarEstado(3L, false);
+        Usuario resultado = service.cambiarEstado(3L,false);
 
         assertFalse(resultado.getActivo());
         verify(repository).save(usuario);
@@ -295,11 +391,11 @@ class UsuarioServiceTest {
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
-            () -> service.editarPersonal(2L, datos)
+            () -> service.editarPersonal(2L,datos)
         );
 
-        assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
-        verify(repository, never()).save(any(Usuario.class));
+        assertEquals(HttpStatus.FORBIDDEN,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
     }
 
     @Test
@@ -316,8 +412,8 @@ class UsuarioServiceTest {
             () -> service.eliminarPersonal(1L)
         );
 
-        assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
-        verify(repository, never()).delete(any(Usuario.class));
+        assertEquals(HttpStatus.FORBIDDEN,error.getStatusCode());
+        verify(repository,never()).delete(any(Usuario.class));
     }
 
     @Test
@@ -332,11 +428,11 @@ class UsuarioServiceTest {
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
-            () -> service.editarPersonal(999L, datos)
+            () -> service.editarPersonal(999L,datos)
         );
 
-        assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
-        verify(repository, never()).save(any(Usuario.class));
+        assertEquals(HttpStatus.NOT_FOUND,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
     }
 
     @Test
@@ -350,11 +446,11 @@ class UsuarioServiceTest {
 
         ResponseStatusException error = assertThrows(
             ResponseStatusException.class,
-            () -> service.cambiarEstado(1L, false)
+            () -> service.cambiarEstado(1L,false)
         );
 
-        assertEquals(HttpStatus.FORBIDDEN, error.getStatusCode());
-        verify(repository, never()).save(any(Usuario.class));
+        assertEquals(HttpStatus.FORBIDDEN,error.getStatusCode());
+        verify(repository,never()).save(any(Usuario.class));
     }
 
     private Usuario crearUsuario() {

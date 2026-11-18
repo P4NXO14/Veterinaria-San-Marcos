@@ -306,7 +306,7 @@ class CitaServiceTest {
         actual.setEstado("Confirmada");
 
         Cita datos = crearCita();
-        datos.setEstado("Rechazada");
+        datos.setEstado("pendiente");
 
         when(repository.findById(7L)).thenReturn(Optional.of(actual));
 

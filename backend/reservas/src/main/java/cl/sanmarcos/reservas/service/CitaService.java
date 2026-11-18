@@ -90,7 +90,7 @@ public class CitaService {
 
         validarTransicion(estadoAnterior, estadoNuevo);
 
-        if ("Cancelada".equals(estadoNuevo) || "Rechazada".equals(estadoNuevo)) {
+        if ("Cancelada".equals(estadoNuevo)) {
             actual.setEstado(estadoNuevo);
             actual.setFechaPropuesta("");
             actual.setHoraPropuesta("");
@@ -223,7 +223,6 @@ public class CitaService {
             case "confirmada" -> "Confirmada";
             case "horario propuesto" -> "Horario propuesto";
             case "cancelada" -> "Cancelada";
-            case "rechazada" -> "Rechazada";
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado de cita no reconocido");
         };
     }
@@ -231,15 +230,15 @@ public class CitaService {
     private void validarTransicion(String anterior, String nuevo) {
         boolean permitida = switch (anterior) {
             case "pendiente" -> List.of(
-                "pendiente", "Confirmada", "Horario propuesto", "Cancelada", "Rechazada"
+                "pendiente", "Confirmada", "Horario propuesto", "Cancelada"
             ).contains(nuevo);
             case "Confirmada" -> List.of(
                 "Confirmada", "Horario propuesto", "Cancelada"
             ).contains(nuevo);
             case "Horario propuesto" -> List.of(
-                "Horario propuesto", "Confirmada", "Cancelada", "Rechazada"
+                "Horario propuesto", "Confirmada", "Cancelada"
             ).contains(nuevo);
-            case "Cancelada", "Rechazada" -> false;
+            case "Cancelada" -> false;
             default -> false;
         };
 

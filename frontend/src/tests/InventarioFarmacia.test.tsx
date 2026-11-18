@@ -1,9 +1,16 @@
 import {afterEach,beforeEach,describe,expect,it,vi} from "vitest";
 import {cleanup,fireEvent,render,screen} from "@testing-library/react";
 import InventarioFarmacia from "../paginas/InventarioFarmacia";
-import {guardarProductosFarmacia,obtenerProductosFarmacia} from "../datos/productosFarmacia";
-import type {ProductoFarmacia} from "../datos/productosFarmacia";
+import {actualizarProductoServidor,crearProductoServidor,eliminarProductoServidor,obtenerProductosServidor} from "../datos/farmaciaApi";
+import type {ProductoServidor} from "../datos/farmaciaApi";
 import type {Sesion} from "../datos/usuarios";
+
+vi.mock("../datos/farmaciaApi",() => ({
+  obtenerProductosServidor: vi.fn(),
+  crearProductoServidor: vi.fn(),
+  actualizarProductoServidor: vi.fn(),
+  eliminarProductoServidor: vi.fn()
+}));
 
 const sesionRecepcionista: Sesion = {
   rut: "900000022",
@@ -21,8 +28,8 @@ const sesionCliente: Sesion = {
   rol: "cliente"
 };
 
-const productoPrueba: ProductoFarmacia = {
-  id: "FMTEST1",
+const productoPrueba: ProductoServidor = {
+  id: "FM001",
   nombre: "Producto Prueba",
   categoria: "Medicamentos",
   precio: 10000,
@@ -32,18 +39,68 @@ const productoPrueba: ProductoFarmacia = {
   requiereReceta: false
 };
 
-const segundoProducto: ProductoFarmacia = {
-  id: "FMTEST2",
+const segundoProducto: ProductoServidor = {
+  id: "FM002",
   nombre: "Suplemento Prueba",
   categoria: "Suplementos",
   precio: 8000,
+  precioAnterior: null,
   stock: 12,
   imagen: "/img/farmacia/suplemento.png",
   requiereReceta: true
 };
 
+let productosEnServidor: ProductoServidor[] = [];
+
 beforeEach(() => {
+  vi.resetAllMocks();
   localStorage.clear();
+
+  Element.prototype.scrollIntoView = vi.fn();
+
+  productosEnServidor = [
+    {...productoPrueba},
+    {...segundoProducto}
+  ];
+
+  vi.mocked(obtenerProductosServidor).mockImplementation(
+    async () =>
+      productosEnServidor.map((producto) => ({
+        ...producto
+      }))
+  );
+
+  vi.mocked(crearProductoServidor).mockImplementation(
+    async (producto) => {
+      productosEnServidor = [
+        ...productosEnServidor,
+        {...producto}
+      ];
+
+      return {...producto};
+    }
+  );
+
+  vi.mocked(actualizarProductoServidor).mockImplementation(
+    async (id,producto) => {
+      productosEnServidor = productosEnServidor.map(
+        (actual) =>
+          actual.id === id
+            ? {...producto,id}
+            : actual
+      );
+
+      return {...producto,id};
+    }
+  );
+
+  vi.mocked(eliminarProductoServidor).mockImplementation(
+    async (id) => {
+      productosEnServidor = productosEnServidor.filter(
+        (producto) => producto.id !== id
+      );
+    }
+  );
 });
 
 afterEach(() => {
@@ -54,26 +111,26 @@ afterEach(() => {
 
 function mostrarInventario(
   sesion: Sesion | null = sesionRecepcionista,
-  productos: ProductoFarmacia[] = [
+  productos: ProductoServidor[] = [
     productoPrueba,
     segundoProducto
   ]
 ) {
-  guardarProductosFarmacia(productos);
+  productosEnServidor = productos.map((producto) => ({
+    ...producto
+  }));
 
   return render(
     <InventarioFarmacia sesion={sesion} />
   );
 }
 
-function cambiarCampo(
-  etiqueta: string,
-  valor: string
-) {
+function cambiarCampo(etiqueta: string,valor: string) {
   fireEvent.change(
-    screen.getByLabelText(etiqueta),
-    {
-      target: {value: valor}
+    screen.getByLabelText(etiqueta),{
+      target: {
+        value: valor
+      }
     }
   );
 }
@@ -103,10 +160,15 @@ function completarProducto() {
     "Ruta de la imagen",
     "/img/farmacia/nuevo.png"
   );
+
+  cambiarCampo(
+    "Contraseña para autorizar cambios",
+    "Clave123"
+  );
 }
 
 function enviarProducto() {
-  const boton = screen.getByRole("button", {
+  const boton = screen.getByRole("button",{
     name: /^(Agregar producto|Guardar cambios)$/
   });
 
@@ -119,9 +181,8 @@ function enviarProducto() {
   fireEvent.submit(formulario);
 }
 
-describe("Permisos de Inventario de Farmacia", () => {
-
-  it("impide acceder con una cuenta de cliente", () => {
+describe("Permisos de Inventario de Farmacia",() => {
+  it("impide acceder con una cuenta de cliente",() => {
     mostrarInventario(sesionCliente);
 
     expect(
@@ -129,17 +190,17 @@ describe("Permisos de Inventario de Farmacia", () => {
         /Esta seccion esta disponible solamente para administradores y recepcionistas/
       )
     ).toBeInTheDocument();
-  });
 
+    expect(obtenerProductosServidor).not.toHaveBeenCalled();
+  });
 });
 
-describe("Listado de productos de Farmacia", () => {
-
-  it("muestra los productos registrados", () => {
+describe("Listado de productos de Farmacia",() => {
+  it("muestra los productos registrados",async () => {
     mostrarInventario();
 
     expect(
-      screen.getByText("Producto Prueba")
+      await screen.findByText("Producto Prueba")
     ).toBeInTheDocument();
 
     expect(
@@ -149,10 +210,14 @@ describe("Listado de productos de Farmacia", () => {
     expect(
       screen.getByText("Productos encontrados: 2")
     ).toBeInTheDocument();
+
+    expect(obtenerProductosServidor).toHaveBeenCalledTimes(1);
   });
 
-  it("filtra productos por nombre", () => {
+  it("filtra productos por nombre",async () => {
     mostrarInventario();
+
+    await screen.findByText("Producto Prueba");
 
     cambiarCampo(
       "Buscar producto",
@@ -172,8 +237,10 @@ describe("Listado de productos de Farmacia", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("filtra productos por categoria", () => {
+  it("filtra productos por categoria",async () => {
     mostrarInventario();
+
+    await screen.findByText("Producto Prueba");
 
     cambiarCampo(
       "Buscar producto",
@@ -188,42 +255,40 @@ describe("Listado de productos de Farmacia", () => {
       screen.getByText("Suplemento Prueba")
     ).toBeInTheDocument();
   });
-
 });
 
-describe("Registro de productos", () => {
-
-  it("rechaza un formulario con campos vacios", () => {
+describe("Registro de productos",() => {
+  it("rechaza un formulario con campos vacios",async () => {
     mostrarInventario();
+
+    await screen.findByText("Producto Prueba");
 
     enviarProducto();
 
     expect(
-      screen.getByRole("status")
-    ).toHaveTextContent(
-      "Debes completar los campos obligatorios"
-    );
+      screen.getByText("Debes completar los campos obligatorios")
+    ).toBeInTheDocument();
+
+    expect(crearProductoServidor).not.toHaveBeenCalled();
   });
 
-  it("agrega correctamente un nuevo producto", () => {
+  it("agrega correctamente un nuevo producto",async () => {
     mostrarInventario();
 
-    completarProducto();
+    await screen.findByText("Producto Prueba");
 
+    completarProducto();
     enviarProducto();
 
     expect(
-      screen.getByRole("status")
-    ).toHaveTextContent(
-      "Producto agregado correctamente"
-    );
+      await screen.findByText("Producto agregado correctamente")
+    ).toBeInTheDocument();
 
-    const productos = obtenerProductosFarmacia();
+    expect(productosEnServidor).toHaveLength(3);
 
-    expect(productos).toHaveLength(3);
-
-    expect(productos).toContainEqual(
+    expect(productosEnServidor).toContainEqual(
       expect.objectContaining({
+        id: "FM003",
         nombre: "Nuevo Producto",
         categoria: "Higiene",
         precio: 12000,
@@ -232,23 +297,44 @@ describe("Registro de productos", () => {
         requiereReceta: false
       })
     );
-  });
 
+    expect(crearProductoServidor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "FM003",
+        nombre: "Nuevo Producto"
+      }),
+      {
+        correo: "personal@sanmarcos.com",
+        password: "Clave123"
+      }
+    );
+
+    expect(
+      screen.getByText("Productos encontrados: 3")
+    ).toBeInTheDocument();
+  });
 });
 
-describe("Edicion de productos", () => {
-
-  it("guarda correctamente los cambios de un producto", () => {
+describe("Edicion de productos",() => {
+  it("guarda correctamente los cambios de un producto",async () => {
     mostrarInventario(
       sesionRecepcionista,
       [productoPrueba]
     );
 
+    await screen.findByText("Producto Prueba");
+
     fireEvent.click(
-      screen.getByRole("button", {
+      screen.getByRole("button",{
         name: "Editar"
       })
     );
+
+    expect(
+      screen.getByRole("heading",{
+        name: "Editar producto"
+      })
+    ).toBeInTheDocument();
 
     cambiarCampo(
       "Nombre del producto",
@@ -265,56 +351,101 @@ describe("Edicion de productos", () => {
       "9"
     );
 
+    cambiarCampo(
+      "Contraseña para autorizar cambios",
+      "Clave123"
+    );
+
     enviarProducto();
 
     expect(
-      obtenerProductosFarmacia()[0]
-    ).toMatchObject({
-      id: "FMTEST1",
+      await screen.findByText("Producto actualizado correctamente")
+    ).toBeInTheDocument();
+
+    expect(productosEnServidor[0]).toMatchObject({
+      id: "FM001",
       nombre: "Producto Actualizado",
       precio: 11000,
       stock: 9
     });
 
-    expect(
-      screen.getByRole("status")
-    ).toHaveTextContent(
-      "Producto actualizado correctamente"
+    expect(actualizarProductoServidor).toHaveBeenCalledWith(
+      "FM001",
+      expect.objectContaining({
+        nombre: "Producto Actualizado",
+        precio: 11000,
+        stock: 9
+      }),
+      {
+        correo: "personal@sanmarcos.com",
+        password: "Clave123"
+      }
     );
-  });
 
+    expect(
+      screen.getByText("Producto Actualizado")
+    ).toBeInTheDocument();
+  });
 });
 
-describe("Eliminacion de productos", () => {
-
-  it("elimina correctamente un producto", () => {
-    vi.spyOn(
-      window,
-      "confirm"
-    ).mockReturnValue(true);
+describe("Eliminacion de productos",() => {
+  it("elimina correctamente un producto",async () => {
+    vi.spyOn(window,"confirm").mockReturnValue(true);
 
     mostrarInventario(
       sesionRecepcionista,
       [productoPrueba]
     );
 
+    await screen.findByText("Producto Prueba");
+
     fireEvent.click(
-      screen.getByRole("button", {
+      screen.getByRole("button",{
         name: "Eliminar"
       })
     );
 
-    expect(obtenerProductosFarmacia()).toEqual([]);
+    expect(
+      screen.getByRole("heading",{
+        name: "Confirmar eliminacion de producto"
+      })
+    ).toBeInTheDocument();
 
     expect(
-      screen.getByRole("status")
-    ).toHaveTextContent(
-      "Producto eliminado correctamente"
+      screen.getByDisplayValue("Producto Prueba")
+    ).toBeDisabled();
+
+    cambiarCampo(
+      "Contraseña para autorizar cambios",
+      "Clave123"
     );
+
+    fireEvent.click(
+      screen.getByRole("button",{
+        name: "Confirmar eliminacion"
+      })
+    );
+
+    expect(
+      await screen.findByText("Producto eliminado correctamente")
+    ).toBeInTheDocument();
+
+    expect(eliminarProductoServidor).toHaveBeenCalledWith(
+      "FM001",
+      {
+        correo: "personal@sanmarcos.com",
+        password: "Clave123"
+      }
+    );
+
+    expect(productosEnServidor).toEqual([]);
 
     expect(
       screen.getByText("Productos encontrados: 0")
     ).toBeInTheDocument();
-  });
 
+    expect(
+      screen.queryByText("Producto Prueba")
+    ).not.toBeInTheDocument();
+  });
 });

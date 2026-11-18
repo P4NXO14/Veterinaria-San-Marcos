@@ -1,33 +1,26 @@
-import { useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
-
-import type { Sesion } from "./datos/usuarios";
-
+import {useState} from "react";
+import {Routes,Route,useNavigate} from "react-router-dom";
+import type {Sesion} from "./datos/usuarios";
+import {limpiarCredencialesReservas} from "./datos/citasApi";
 import Encabezado from "./componentes/organismos/Encabezado";
-
 import Inicio from "./paginas/Inicio";
 import Login from "./paginas/Login";
 import Registro from "./paginas/Registro";
 import Nosotros from "./paginas/Nosotros";
 import Contacto from "./paginas/Contacto";
-
 import Servicios from "./paginas/Servicios";
 import DetalleServicio from "./paginas/DetalleServicio";
-
 import Reserva from "./paginas/Reserva";
 import Recepcion from "./paginas/Recepcion";
 import Administracion from "./paginas/Administracion";
-
 import Farmacia from "./paginas/Farmacia";
 import InventarioFarmacia from "./paginas/InventarioFarmacia";
 
 function App() {
   const navigate = useNavigate();
 
-  const [sesion, setSesion] = useState<Sesion | null>(() => {
-    const sesionGuardada = localStorage.getItem(
-      "sesionSanMarcos"
-    );
+  const [sesion,setSesion] = useState<Sesion | null>(() => {
+    const sesionGuardada = localStorage.getItem("sesionSanMarcos");
 
     if (!sesionGuardada) {
       return null;
@@ -41,24 +34,18 @@ function App() {
   });
 
   function cerrarSesion() {
+    limpiarCredencialesReservas();
     localStorage.removeItem("sesionSanMarcos");
-
     localStorage.removeItem("destinoSanMarcos");
-
     setSesion(null);
-
     navigate("/");
   }
 
-
-  const puedeVerServicios =
-    !sesion || sesion.rol === "cliente";
-
+  const puedeVerServicios = !sesion || sesion.rol === "cliente";
 
   const accesoRestringidoServicios = (
     <main className="contenedor-principal">
       <h1>Acceso restringido</h1>
-
       <p>
         Esta seccion esta disponible solamente para visitantes y clientes de la veterinaria
       </p>
@@ -73,7 +60,6 @@ function App() {
       />
 
       <Routes>
-
         <Route
           path="/"
           element={<Inicio sesion={sesion} />}
@@ -96,9 +82,7 @@ function App() {
 
         <Route
           path="/login"
-          element={
-            <Login onIniciarSesion={setSesion} />
-          }
+          element={<Login onIniciarSesion={setSesion} />}
         />
 
         <Route
@@ -141,11 +125,8 @@ function App() {
 
         <Route
           path="/inventario-farmacia"
-          element={
-            <InventarioFarmacia sesion={sesion} />
-          }
+          element={<InventarioFarmacia sesion={sesion} />}
         />
-
       </Routes>
 
       <footer className="text-center py-3">

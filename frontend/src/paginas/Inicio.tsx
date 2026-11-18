@@ -1,16 +1,50 @@
-import { Link, useNavigate } from "react-router-dom";
-
-import { servicios } from "../datos/servicios";
+import {useEffect,useState} from "react";
+import {Link,useNavigate} from "react-router-dom";
 import TarjetaServicio from "../componentes/moleculas/TarjetaServicio";
-
-import type { Sesion } from "../datos/usuarios";
+import {obtenerServiciosServidor} from "../datos/catalogoApi";
+import type {Servicio} from "../datos/servicios";
+import type {Sesion} from "../datos/usuarios";
 
 interface InicioProps {
   sesion: Sesion | null;
 }
 
-function Inicio({ sesion }: InicioProps) {
+function Inicio({sesion}: InicioProps) {
   const navigate = useNavigate();
+
+  const [servicios,setServicios] = useState<Servicio[]>([]);
+  const [cargando,setCargando] = useState(true);
+  const [error,setError] = useState("");
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerServiciosServidor()
+      .then((datos) => {
+        if (activo) {
+          setServicios(datos);
+          setError("");
+        }
+      })
+      .catch((fallo: unknown) => {
+        if (activo) {
+          setError(
+            fallo instanceof Error
+              ? fallo.message
+              : "No se pudieron cargar los servicios destacados"
+          );
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargando(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  },[]);
 
   function solicitarCita(id: string) {
     if (!sesion) {
@@ -19,16 +53,8 @@ function Inicio({ sesion }: InicioProps) {
       );
 
       if (confirmar) {
-        sessionStorage.setItem(
-          "servicioCitaSanMarcos",
-          id
-        );
-
-        localStorage.setItem(
-          "destinoSanMarcos",
-          "/reserva"
-        );
-
+        sessionStorage.setItem("servicioCitaSanMarcos",id);
+        localStorage.setItem("destinoSanMarcos","/reserva");
         navigate("/login");
       }
 
@@ -42,11 +68,7 @@ function Inicio({ sesion }: InicioProps) {
       return;
     }
 
-    sessionStorage.setItem(
-      "servicioCitaSanMarcos",
-      id
-    );
-
+    sessionStorage.setItem("servicioCitaSanMarcos",id);
     navigate("/reserva");
   }
 
@@ -77,15 +99,29 @@ function Inicio({ sesion }: InicioProps) {
       <section className="destacados">
         <h2>Servicios destacados</h2>
 
-        <div id="contenedor-servicios">
-          {servicios.slice(0, 6).map((servicio) => (
-            <TarjetaServicio
-              key={servicio.id}
-              servicio={servicio}
-              onSolicitarCita={solicitarCita}
-            />
-          ))}
-        </div>
+        {cargando && (
+          <p role="status">
+            Cargando servicios destacados
+          </p>
+        )}
+
+        {error && (
+          <p role="alert">
+            {error}
+          </p>
+        )}
+
+        {!cargando && !error && (
+          <div id="contenedor-servicios">
+            {servicios.slice(0,6).map((servicio) => (
+              <TarjetaServicio
+                key={servicio.id}
+                servicio={servicio}
+                onSolicitarCita={solicitarCita}
+              />
+            ))}
+          </div>
+        )}
 
         {puedeVerCatalogo && (
           <p className="texto-centrado">

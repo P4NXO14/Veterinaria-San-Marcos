@@ -3,6 +3,7 @@ import type {FormEvent} from "react";
 import {useLocation,useNavigate} from "react-router-dom";
 import CampoFormulario from "../moleculas/CampoFormulario";
 import {iniciarSesionUsuario} from "../../datos/usuariosApi";
+import {guardarCredencialesReservas} from "../../datos/citasApi";
 import type {Sesion} from "../../datos/usuarios";
 
 interface FormularioLoginProps {
@@ -56,10 +57,11 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
                 password
             });
 
+            guardarCredencialesReservas(sesion.correo,password);
             localStorage.setItem("sesionSanMarcos", JSON.stringify(sesion));
             onIniciarSesion(sesion);
 
-            setMensaje(`Bienvenido ${sesion.nombre}. Inicio de sesion correcto`);
+            setMensaje(`Bienvenido ${sesion.nombre} Inicio de sesion correcto`);
             setTipoMensaje("exito");
 
             const estadoNavegacion = location.state as EstadoNavegacion | null;
@@ -82,7 +84,7 @@ function FormularioLogin({onIniciarSesion}: FormularioLoginProps) {
                 navigate(destino, {replace: true});
             }, 800);
         } catch (error) {
-            mostrarError(error instanceof Error ? error.message : "Error al iniciar sesion.");
+            mostrarError(error instanceof Error ? error.message : "Error al iniciar sesion");
         } finally {
             setIngresando(false);
         }

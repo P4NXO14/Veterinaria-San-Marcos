@@ -9,12 +9,13 @@ interface FormularioContactoProps {
 }
 
 function FormularioContacto({sesion}: FormularioContactoProps) {
-    const [nombre, setNombre] = useState("");
-    const [correo, setCorreo] = useState("");
-    const [comentario, setComentario] = useState("");
-    const [mensaje, setMensaje] = useState("");
-    const [tipoMensaje, setTipoMensaje] = useState<"error" | "exito">("error");
-    const [enviando, setEnviando] = useState(false);
+    const [nombre,setNombre] = useState("");
+    const [correo,setCorreo] = useState("");
+    const [comentario,setComentario] = useState("");
+    const [clave,setClave] = useState("");
+    const [mensaje,setMensaje] = useState("");
+    const [tipoMensaje,setTipoMensaje] = useState<"error" | "exito">("error");
+    const [enviando,setEnviando] = useState(false);
 
     function mostrarError(texto: string) {
         setMensaje(texto);
@@ -33,17 +34,22 @@ function FormularioContacto({sesion}: FormularioContactoProps) {
         const comentarioLimpio = comentario.trim();
 
         if (nombreLimpio === "" || nombreLimpio.length > 100) {
-            mostrarError("Error: El nombre es obligatorio y admite hasta 100 caracteres.");
+            mostrarError("El nombre es obligatorio y admite hasta 100 caracteres");
             return;
         }
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLimpio) || correoLimpio.length > 100) {
-            mostrarError("Error: Ingresa un correo valido de hasta 100 caracteres.");
+            mostrarError("Ingresa un correo valido de hasta 100 caracteres");
             return;
         }
 
         if (comentarioLimpio === "" || comentarioLimpio.length > 500) {
-            mostrarError("Error: El mensaje es obligatorio y admite hasta 500 caracteres.");
+            mostrarError("El mensaje es obligatorio y admite hasta 500 caracteres");
+            return;
+        }
+
+        if (clave.length < 4 || clave.length > 10) {
+            mostrarError("La contraseña debe tener entre 4 y 10 caracteres");
             return;
         }
 
@@ -54,18 +60,25 @@ function FormularioContacto({sesion}: FormularioContactoProps) {
             await guardarMensajeContacto({
                 nombre: nombreLimpio,
                 correo: correoLimpio,
-                comentario: comentarioLimpio,
-                correoCuenta: sesion.correo
+                comentario: comentarioLimpio
+            },{
+                correo: sesion.correo,
+                password: clave
             });
 
-            setMensaje("Mensaje enviado correctamente a recepcion.");
+            setMensaje("Mensaje enviado correctamente a recepcion");
             setTipoMensaje("exito");
             setNombre("");
             setCorreo("");
             setComentario("");
-        } catch {
-            mostrarError("Error: No se pudo guardar el mensaje.");
+        } catch (error) {
+            mostrarError(
+                error instanceof Error
+                    ? error.message
+                    : "No se pudo guardar el mensaje"
+            );
         } finally {
+            setClave("");
             setEnviando(false);
         }
     }
@@ -114,7 +127,23 @@ function FormularioContacto({sesion}: FormularioContactoProps) {
                 required
             />
 
-            <button type="submit" className="btn-principal" disabled={enviando}>
+            <CampoFormulario
+                id="contactoClaveEnvio"
+                etiqueta="Contraseña para enviar la consulta:"
+                tipo="password"
+                valor={clave}
+                onChange={setClave}
+                minLength={4}
+                maxLength={10}
+                autoComplete="current-password"
+                placeholder="Ingresa tu contraseña"
+            />
+
+            <button
+                type="submit"
+                className="btn-principal"
+                disabled={enviando}
+            >
                 {enviando ? "Enviando..." : "Enviar Mensaje"}
             </button>
 

@@ -1,45 +1,50 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-
+import {useState} from "react";
+import type {FormEvent} from "react";
 import CampoFormulario from "../moleculas/CampoFormulario";
-import type { Usuario, DatosEdicionPersonal } from "../../datos/usuarios";
+import type {DatosEdicionPersonal} from "../../datos/usuarios";
+import type {UsuarioAdministracion} from "../../datos/usuariosAdminApi";
 
 interface FormularioEditarPersonalProps {
-  usuario: Usuario;
+  usuario: UsuarioAdministracion;
   onGuardar: (datos: DatosEdicionPersonal) => void;
   onCancelar: () => void;
+  procesando: boolean;
 }
 
 function FormularioEditarPersonal({
   usuario,
   onGuardar,
-  onCancelar
+  onCancelar,
+  procesando
 }: FormularioEditarPersonalProps) {
+  const [nombre,setNombre] = useState(usuario.nombre);
+  const [apellidos,setApellidos] = useState(usuario.apellidos);
+  const [direccion,setDireccion] = useState(usuario.direccion);
+  const [mensaje,setMensaje] = useState("");
 
-  const [nombre, setNombre] = useState(usuario.nombre);
-  const [apellidos, setApellidos] = useState(usuario.apellidos);
-  const [direccion, setDireccion] = useState(usuario.direccion);
-  const [mensaje, setMensaje] = useState("");
+  function guardarCambios(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
 
-  function guardarCambios(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+    if (procesando) {
+      return;
+    }
 
     const nombreLimpio = nombre.trim();
     const apellidosLimpios = apellidos.trim();
     const direccionLimpia = direccion.trim();
 
     if (!nombreLimpio || nombreLimpio.length > 50) {
-      setMensaje("Ingresa un nombre valido de hasta 50 caracteres.");
+      setMensaje("Ingresa un nombre valido de hasta 50 caracteres");
       return;
     }
 
     if (!apellidosLimpios || apellidosLimpios.length > 100) {
-      setMensaje("Ingresa apellidos validos de hasta 100 caracteres.");
+      setMensaje("Ingresa apellidos validos de hasta 100 caracteres");
       return;
     }
 
-    if (!direccionLimpia || direccionLimpia.length > 300) {
-      setMensaje("Ingresa una direccion valida de hasta 300 caracteres.");
+    if (!direccionLimpia || direccionLimpia.length > 255) {
+      setMensaje("Ingresa una direccion valida de hasta 255 caracteres");
       return;
     }
 
@@ -57,7 +62,7 @@ function FormularioEditarPersonal({
       <h2>Editar Personal</h2>
 
       <p>
-        Modifica los datos del personal de la veterinaria.
+        Modifica los datos del personal de la veterinaria
       </p>
 
       <form
@@ -89,7 +94,7 @@ function FormularioEditarPersonal({
           tipo="text"
           valor={direccion}
           onChange={setDireccion}
-          maxLength={300}
+          maxLength={255}
         />
 
         {mensaje && (
@@ -99,13 +104,18 @@ function FormularioEditarPersonal({
         )}
 
         <div className="d-flex gap-2">
-          <button type="submit" className="btn btn-primary">
-            Guardar cambios
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={procesando}
+          >
+            {procesando ? "Guardando cambios" : "Guardar cambios"}
           </button>
 
           <button
             type="button"
             className="btn btn-secondary"
+            disabled={procesando}
             onClick={onCancelar}
           >
             Cancelar

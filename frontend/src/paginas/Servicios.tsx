@@ -1,27 +1,57 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-
+import {useEffect,useState} from "react";
+import {useNavigate} from "react-router-dom";
 import TarjetaServicio from "../componentes/moleculas/TarjetaServicio";
-
-import { servicios } from "../datos/servicios";
-import type { Sesion } from "../datos/usuarios";
+import {obtenerServiciosServidor} from "../datos/catalogoApi";
+import type {Servicio} from "../datos/servicios";
+import type {Sesion} from "../datos/usuarios";
 
 interface ServiciosProps {
   sesion: Sesion | null;
 }
 
-function Servicios({ sesion }: ServiciosProps) {
+function Servicios({sesion}: ServiciosProps) {
   const navigate = useNavigate();
 
-  const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] = useState("Todas");
-  const [mensaje, setMensaje] = useState("");
+  const [servicios,setServicios] = useState<Servicio[]>([]);
+  const [busqueda,setBusqueda] = useState("");
+  const [categoria,setCategoria] = useState("Todas");
+  const [mensaje,setMensaje] = useState("");
+  const [cargando,setCargando] = useState(true);
+  const [error,setError] = useState("");
+
+  useEffect(() => {
+    let activo = true;
+
+    obtenerServiciosServidor()
+      .then((datos) => {
+        if (activo) {
+          setServicios(datos);
+          setError("");
+        }
+      })
+      .catch((fallo: unknown) => {
+        if (activo) {
+          setError(
+            fallo instanceof Error
+              ? fallo.message
+              : "No se pudo cargar el catalogo de servicios"
+          );
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargando(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  },[]);
 
   const categorias = [
     "Todas",
-    ...new Set(
-      servicios.map((servicio) => servicio.categoria)
-    )
+    ...new Set(servicios.map((servicio) => servicio.categoria))
   ];
 
   const serviciosFiltrados = servicios.filter((servicio) => {
@@ -67,32 +97,18 @@ function Servicios({ sesion }: ServiciosProps) {
         return;
       }
 
-      sessionStorage.setItem(
-        "servicioCitaSanMarcos",
-        id
-      );
-
-      localStorage.setItem(
-        "destinoSanMarcos",
-        "/reserva"
-      );
-
+      sessionStorage.setItem("servicioCitaSanMarcos",id);
+      localStorage.setItem("destinoSanMarcos","/reserva");
       navigate("/login");
       return;
     }
 
     if (sesion.rol !== "cliente") {
-      setMensaje(
-        "Solo los clientes pueden solicitar citas desde el catalogo"
-      );
+      setMensaje("Solo los clientes pueden solicitar citas desde el catalogo");
       return;
     }
 
-    sessionStorage.setItem(
-      "servicioCitaSanMarcos",
-      id
-    );
-
+    sessionStorage.setItem("servicioCitaSanMarcos",id);
     navigate("/reserva");
   }
 
@@ -104,7 +120,6 @@ function Servicios({ sesion }: ServiciosProps) {
 
   return (
     <main className="servicios-pagina">
-
       <section className="servicios-encabezado">
         <h1>Servicios Veterinarios</h1>
 
@@ -121,9 +136,7 @@ function Servicios({ sesion }: ServiciosProps) {
         className="servicios-contenido"
         aria-label="Catalogo de servicios veterinarios"
       >
-
         <div className="servicios-filtros">
-
           <div className="servicios-filtro">
             <label htmlFor="buscarServicio">
               Buscar servicio
@@ -172,63 +185,65 @@ function Servicios({ sesion }: ServiciosProps) {
           >
             Limpiar filtros
           </button>
-
         </div>
 
-        <div className="servicios-resumen">
-          <p>
-            Servicios encontrados:{" "}
-            <strong>
-              {serviciosFiltrados.length}
-            </strong>
-            {" "}de {servicios.length}
-          </p>
-        </div>
-
-        {mensaje && (
-          <p
-            className="servicios-mensaje"
-            role="status"
-          >
-            {mensaje}
+        {cargando && (
+          <p className="servicios-mensaje" role="status">
+            Cargando servicios desde MySQL
           </p>
         )}
 
-        {serviciosFiltrados.length > 0 ? (
-
-          <div className="servicios-grid">
-
-            {serviciosFiltrados.map((servicio) => (
-              <TarjetaServicio
-                key={servicio.id}
-                servicio={servicio}
-                onSolicitarCita={solicitarCita}
-              />
-            ))}
-
-          </div>
-
-        ) : (
-
-          <div className="servicios-sin-resultados">
-            <h2>No se encontraron servicios</h2>
-
-            <p>
-              Prueba con otro nombre o selecciona una categoria diferente
-            </p>
-
-            <button
-              type="button"
-              onClick={limpiarFiltros}
-            >
-              Mostrar todos los servicios
-            </button>
-          </div>
-
+        {error && (
+          <p className="servicios-mensaje" role="alert">
+            {error}
+          </p>
         )}
 
+        {!cargando && !error && (
+          <>
+            <div className="servicios-resumen">
+              <p>
+                Servicios encontrados:{" "}
+                <strong>{serviciosFiltrados.length}</strong>
+                {" "}de {servicios.length}
+              </p>
+            </div>
+
+            {mensaje && (
+              <p className="servicios-mensaje" role="status">
+                {mensaje}
+              </p>
+            )}
+
+            {serviciosFiltrados.length > 0 ? (
+              <div className="servicios-grid">
+                {serviciosFiltrados.map((servicio) => (
+                  <TarjetaServicio
+                    key={servicio.id}
+                    servicio={servicio}
+                    onSolicitarCita={solicitarCita}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="servicios-sin-resultados">
+                <h2>No se encontraron servicios</h2>
+
+                <p>
+                  Prueba con otro nombre o selecciona una categoria diferente
+                </p>
+
+                <button
+                  type="button"
+                  onClick={limpiarFiltros}
+                >
+                  Mostrar todos los servicios
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </section>
-
     </main>
   );
 }

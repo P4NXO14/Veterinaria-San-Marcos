@@ -52,14 +52,7 @@ export function confirmarCita(id: string): boolean {
     (item) => item.id === id
   );
 
-  if (!cita) {
-    return false;
-  }
-
-  if (
-    cita.estado === "Cancelada" ||
-    cita.estado === "Rechazada"
-  ) {
+  if (!cita || cita.estado === "Cancelada") {
     return false;
   }
 
@@ -81,14 +74,7 @@ export function proponerHorarioCita(
     (item) => item.id === id
   );
 
-  if (!cita || !fecha || !hora) {
-    return false;
-  }
-
-  if (
-    cita.estado === "Cancelada" ||
-    cita.estado === "Rechazada"
-  ) {
+  if (!cita || !fecha || !hora || cita.estado === "Cancelada") {
     return false;
   }
 
@@ -108,14 +94,7 @@ export function cancelarCita(id: string): boolean {
     (item) => item.id === id
   );
 
-  if (!cita) {
-    return false;
-  }
-
-  if (
-    cita.estado === "Cancelada" ||
-    cita.estado === "Rechazada"
-  ) {
+  if (!cita || cita.estado === "Cancelada") {
     return false;
   }
 
