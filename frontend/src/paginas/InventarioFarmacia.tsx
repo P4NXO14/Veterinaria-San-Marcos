@@ -1,15 +1,8 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
-
-import type { Sesion } from "../datos/usuarios";
-import type { ProductoFarmacia } from "../datos/productosFarmacia";
-
-import {
-  obtenerProductosFarmacia,
-  agregarProductoFarmacia,
-  editarProductoFarmacia,
-  eliminarProductoFarmacia
-} from "../datos/productosFarmacia";
+import {useEffect,useState} from "react";
+import type {FormEvent} from "react";
+import type {Sesion} from "../datos/usuarios";
+import {actualizarProductoServidor,crearProductoServidor,eliminarProductoServidor,obtenerProductosServidor} from "../datos/farmaciaApi";
+import type {ProductoServidor} from "../datos/farmaciaApi";
 
 interface InventarioFarmaciaProps {
   sesion: Sesion | null;
@@ -39,25 +32,74 @@ function formatearPrecio(precio: number): string {
   return `$${precio.toLocaleString("es-CL")}`;
 }
 
-function InventarioFarmacia({
-  sesion
-}: InventarioFarmaciaProps) {
+function generarSiguienteCodigo(productos: ProductoServidor[]): string {
+  const maximo = productos.reduce((mayor,producto) => {
+    const coincidencia = /^FM(\d{3,8})$/.exec(producto.id);
 
-  const [productos, setProductos] = useState<ProductoFarmacia[]>(
-    obtenerProductosFarmacia
-  );
+    if (!coincidencia) {
+      return mayor;
+    }
 
-  const [busqueda, setBusqueda] = useState("");
-  const [formulario, setFormulario] = useState<DatosFormulario>({
+    return Math.max(mayor,Number(coincidencia[1]));
+  },0);
+
+  return `FM${String(maximo + 1).padStart(3,"0")}`;
+}
+
+function InventarioFarmacia({sesion}: InventarioFarmaciaProps) {
+  const [productos,setProductos] = useState<ProductoServidor[]>([]);
+  const [busqueda,setBusqueda] = useState("");
+  const [formulario,setFormulario] = useState<DatosFormulario>({
     ...formularioInicial
   });
 
-  const [idEditando, setIdEditando] = useState<string | null>(null);
-  const [mensaje, setMensaje] = useState("");
+  const [idEditando,setIdEditando] = useState<string | null>(null);
+  const [idEliminando,setIdEliminando] = useState<string | null>(null);
+  const [mensaje,setMensaje] = useState("");
+  const [clave,setClave] = useState("");
+  const [cargando,setCargando] = useState(true);
+  const [procesando,setProcesando] = useState(false);
+  const [errorCarga,setErrorCarga] = useState("");
 
   const esPersonal =
     sesion?.rol === "admin" ||
     sesion?.rol === "recepcionista";
+
+  const revisandoEliminacion = idEliminando !== null;
+
+  useEffect(() => {
+    if (!esPersonal) {
+      return;
+    }
+
+    let activo = true;
+
+    obtenerProductosServidor()
+      .then((datos) => {
+        if (activo) {
+          setProductos(datos);
+          setErrorCarga("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (activo) {
+          setErrorCarga(
+            error instanceof Error
+              ? error.message
+              : "No se pudo cargar el inventario"
+          );
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargando(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  },[esPersonal]);
 
   const productosFiltrados = productos.filter((producto) => {
     const texto = busqueda.toLowerCase().trim();
@@ -69,8 +111,10 @@ function InventarioFarmacia({
     );
   });
 
-  function actualizarListado() {
-    setProductos(obtenerProductosFarmacia());
+  async function actualizarListado() {
+    const datos = await obtenerProductosServidor();
+    setProductos(datos);
+    setErrorCarga("");
   }
 
   function actualizarCampo(
@@ -86,19 +130,19 @@ function InventarioFarmacia({
   }
 
   function limpiarFormulario() {
-    setFormulario({ ...formularioInicial });
+    setFormulario({...formularioInicial});
     setIdEditando(null);
+    setIdEliminando(null);
+    setClave("");
   }
 
-  function editar(producto: ProductoFarmacia) {
-    setIdEditando(producto.id);
-
+  function cargarDatosProducto(producto: ProductoServidor) {
     setFormulario({
       nombre: producto.nombre,
       categoria: producto.categoria,
       precio: String(producto.precio),
       precioAnterior:
-        producto.precioAnterior !== undefined
+        producto.precioAnterior != null
           ? String(producto.precioAnterior)
           : "",
       stock: String(producto.stock),
@@ -106,13 +150,40 @@ function InventarioFarmacia({
       requiereReceta: producto.requiereReceta
     });
 
+    setClave("");
     setMensaje("");
   }
 
-  function guardarProducto(evento: FormEvent<HTMLFormElement>) {
+  function editar(producto: ProductoServidor) {
+    cargarDatosProducto(producto);
+    setIdEditando(producto.id);
+    setIdEliminando(null);
+
+    document.querySelector(".inventario-formulario")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  function seleccionarEliminar(producto: ProductoServidor) {
+    cargarDatosProducto(producto);
+    setIdEditando(null);
+    setIdEliminando(producto.id);
+
+    document.querySelector(".inventario-formulario")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+
+  async function guardarProducto(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
 
-    if (!esPersonal) {
+    if (procesando || revisandoEliminacion) {
+      return;
+    }
+
+    if (!sesion || !esPersonal) {
       setMensaje("No tienes permisos para modificar el inventario");
       return;
     }
@@ -123,7 +194,7 @@ function InventarioFarmacia({
     const precioAnterior =
       formulario.precioAnterior.trim() !== ""
         ? Number(formulario.precioAnterior)
-        : undefined;
+        : null;
 
     if (
       !formulario.nombre.trim() ||
@@ -135,7 +206,7 @@ function InventarioFarmacia({
       return;
     }
 
-    if (!Number.isFinite(precio) || precio < 0) {
+    if (!Number.isInteger(precio) || precio < 0) {
       setMensaje("Ingresa un precio valido");
       return;
     }
@@ -146,17 +217,22 @@ function InventarioFarmacia({
     }
 
     if (
-      precioAnterior !== undefined &&
+      precioAnterior !== null &&
       (
-        !Number.isFinite(precioAnterior) ||
+        !Number.isInteger(precioAnterior) ||
         precioAnterior <= precio
       )
     ) {
-      setMensaje(
-        "El precio anterior debe ser mayor al precio actual"
-      );
+      setMensaje("El precio anterior debe ser mayor al precio actual");
       return;
     }
+
+    if (!clave) {
+      setMensaje("Ingresa tu contraseña para autorizar el cambio");
+      return;
+    }
+
+    const editando = idEditando !== null;
 
     const datos = {
       nombre: formulario.nombre.trim(),
@@ -168,66 +244,121 @@ function InventarioFarmacia({
       requiereReceta: formulario.requiereReceta
     };
 
-    let resultado = false;
+    setProcesando(true);
+    setMensaje("");
 
-    if (idEditando) {
-      resultado = editarProductoFarmacia(idEditando, datos);
-    } else {
-      const nuevoProducto: ProductoFarmacia = {
-        id: `FM${Date.now()}`,
-        ...datos
+    try {
+      const credenciales = {
+        correo: sesion.correo,
+        password: clave
       };
 
-      resultado = agregarProductoFarmacia(nuevoProducto);
-    }
+      if (idEditando !== null) {
+        await actualizarProductoServidor(
+          idEditando,
+          {
+            id: idEditando,
+            ...datos
+          },
+          credenciales
+        );
+      } else {
+        const productosActuales = await obtenerProductosServidor();
+        const siguienteId = generarSiguienteCodigo(productosActuales);
 
-    if (resultado) {
-      actualizarListado();
+        await crearProductoServidor(
+          {
+            id: siguienteId,
+            ...datos
+          },
+          credenciales
+        );
+      }
+
       limpiarFormulario();
 
+      try {
+        await actualizarListado();
+
+        setMensaje(
+          editando
+            ? "Producto actualizado correctamente"
+            : "Producto agregado correctamente"
+        );
+      } catch {
+        setErrorCarga("No se pudo actualizar el listado, recarga la pagina");
+        setMensaje(
+          "El producto se guardo en MySQL, pero no se pudo actualizar el listado"
+        );
+      }
+    } catch (error) {
       setMensaje(
-        idEditando
-          ? "Producto actualizado correctamente."
-          : "Producto agregado correctamente."
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar el producto"
       );
-    } else {
-      setMensaje("No se pudo guardar el producto.");
+    } finally {
+      setClave("");
+      setProcesando(false);
     }
   }
 
-  function eliminar(id: string) {
-    if (!esPersonal) {
+  async function confirmarEliminacion() {
+    if (procesando || !sesion || !esPersonal || !idEliminando) {
       return;
     }
 
     const producto = productos.find(
-      (item) => item.id === id
+      (item) => item.id === idEliminando
     );
 
     if (!producto) {
+      setMensaje("El producto seleccionado ya no esta disponible");
+      return;
+    }
+
+    if (!clave) {
+      setMensaje("Ingresa tu contraseña para autorizar la eliminacion");
       return;
     }
 
     const confirmar = window.confirm(
-      `¿Estas seguro de que deseas eliminar ${producto.nombre}?`
+      `¿Confirmas la eliminacion de ${producto.nombre}, codigo ${producto.id}?`
     );
 
     if (!confirmar) {
       return;
     }
 
-    const resultado = eliminarProductoFarmacia(id);
+    setProcesando(true);
+    setMensaje("");
 
-    if (resultado) {
-      actualizarListado();
+    try {
+      await eliminarProductoServidor(producto.id,{
+        correo: sesion.correo,
+        password: clave
+      });
 
-      if (idEditando === id) {
-        limpiarFormulario();
+      limpiarFormulario();
+
+      try {
+        await actualizarListado();
+        setMensaje("Producto eliminado correctamente");
+      } catch {
+        setErrorCarga("No se pudo actualizar el listado, recarga la pagina");
+        setMensaje(
+          "El producto se elimino en MySQL, pero no se pudo actualizar el listado"
+        );
       }
-
-      setMensaje("Producto eliminado correctamente");
-    } else {
-      setMensaje("No se pudo eliminar el producto");
+    } catch (error) {
+      setMensaje(
+        error instanceof Error
+          ? error.message
+          : "No se pudo eliminar el producto"
+      );
+    } finally {
+      setClave("");
+      setProcesando(false);
     }
   }
 
@@ -253,6 +384,18 @@ function InventarioFarmacia({
         </p>
       </section>
 
+      {cargando && (
+        <p className="inventario-mensaje" role="status">
+          Cargando inventario desde el servidor
+        </p>
+      )}
+
+      {errorCarga && (
+        <p className="inventario-mensaje" role="alert">
+          {errorCarga}
+        </p>
+      )}
+
       {mensaje && (
         <p className="inventario-mensaje" role="status">
           {mensaje}
@@ -261,10 +404,18 @@ function InventarioFarmacia({
 
       <section className="inventario-formulario">
         <h2>
-          {idEditando
-            ? "Editar producto"
-            : "Agregar nuevo producto"}
+          {revisandoEliminacion
+            ? "Confirmar eliminacion de producto"
+            : idEditando
+              ? "Editar producto"
+              : "Agregar nuevo producto"}
         </h2>
+
+        {revisandoEliminacion && (
+          <p className="inventario-mensaje" role="status">
+            Codigo seleccionado: {idEliminando} - Revisa los datos antes de confirmar la eliminacion
+          </p>
+        )}
 
         <form onSubmit={guardarProducto}>
 
@@ -280,8 +431,9 @@ function InventarioFarmacia({
                 type="text"
                 value={formulario.nombre}
                 onChange={(evento) =>
-                  actualizarCampo("nombre", evento.target.value)
+                  actualizarCampo("nombre",evento.target.value)
                 }
+                disabled={procesando || revisandoEliminacion}
                 maxLength={120}
                 required
               />
@@ -296,8 +448,9 @@ function InventarioFarmacia({
                 id="inventarioCategoria"
                 value={formulario.categoria}
                 onChange={(evento) =>
-                  actualizarCampo("categoria", evento.target.value)
+                  actualizarCampo("categoria",evento.target.value)
                 }
+                disabled={procesando || revisandoEliminacion}
                 required
               >
                 <option value="Medicamentos">
@@ -330,8 +483,9 @@ function InventarioFarmacia({
                 step="1"
                 value={formulario.precio}
                 onChange={(evento) =>
-                  actualizarCampo("precio", evento.target.value)
+                  actualizarCampo("precio",evento.target.value)
                 }
+                disabled={procesando || revisandoEliminacion}
                 required
               />
             </div>
@@ -348,11 +502,9 @@ function InventarioFarmacia({
                 step="1"
                 value={formulario.precioAnterior}
                 onChange={(evento) =>
-                  actualizarCampo(
-                    "precioAnterior",
-                    evento.target.value
-                  )
+                  actualizarCampo("precioAnterior",evento.target.value)
                 }
+                disabled={procesando || revisandoEliminacion}
               />
             </div>
 
@@ -368,8 +520,9 @@ function InventarioFarmacia({
                 step="1"
                 value={formulario.stock}
                 onChange={(evento) =>
-                  actualizarCampo("stock", evento.target.value)
+                  actualizarCampo("stock",evento.target.value)
                 }
+                disabled={procesando || revisandoEliminacion}
                 required
               />
             </div>
@@ -384,9 +537,29 @@ function InventarioFarmacia({
                 type="text"
                 value={formulario.imagen}
                 onChange={(evento) =>
-                  actualizarCampo("imagen", evento.target.value)
+                  actualizarCampo("imagen",evento.target.value)
                 }
+                disabled={procesando || revisandoEliminacion}
+                maxLength={500}
                 placeholder="/img/farmacia/producto.png"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="inventarioClave">
+                Contraseña para autorizar cambios
+              </label>
+
+              <input
+                id="inventarioClave"
+                type="password"
+                value={clave}
+                onChange={(evento) =>
+                  setClave(evento.target.value)
+                }
+                autoComplete="current-password"
+                disabled={procesando}
+                placeholder="Ingresa tu contraseña"
               />
             </div>
 
@@ -397,37 +570,66 @@ function InventarioFarmacia({
               type="checkbox"
               checked={formulario.requiereReceta}
               onChange={(evento) =>
-                actualizarCampo(
-                  "requiereReceta",
-                  evento.target.checked
-                )
+                actualizarCampo("requiereReceta",evento.target.checked)
               }
+              disabled={procesando || revisandoEliminacion}
             />
 
             Requiere receta veterinaria
           </label>
 
           <div className="inventario-acciones">
-            <button
-              type="submit"
-              className="btn-principal"
-            >
-              {idEditando
-                ? "Guardar cambios"
-                : "Agregar producto"}
-            </button>
+            {revisandoEliminacion ? (
+              <>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  disabled={cargando || procesando || Boolean(errorCarga)}
+                  onClick={() => {void confirmarEliminacion();}}
+                >
+                  {procesando
+                    ? "Eliminando producto..."
+                    : "Confirmar eliminacion"}
+                </button>
 
-            {idEditando && (
-              <button
-                type="button"
-                className="btn-secundario"
-                onClick={() => {
-                  limpiarFormulario();
-                  setMensaje("");
-                }}
-              >
-                Cancelar edicion
-              </button>
+                <button
+                  type="button"
+                  className="btn-secundario"
+                  disabled={procesando}
+                  onClick={() => {
+                    limpiarFormulario();
+                    setMensaje("");
+                  }}
+                >
+                  Cancelar eliminacion
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="submit"
+                  className="btn-principal"
+                  disabled={cargando || procesando || Boolean(errorCarga)}
+                >
+                  {idEditando
+                    ? "Guardar cambios"
+                    : "Agregar producto"}
+                </button>
+
+                {idEditando && (
+                  <button
+                    type="button"
+                    className="btn-secundario"
+                    disabled={procesando}
+                    onClick={() => {
+                      limpiarFormulario();
+                      setMensaje("");
+                    }}
+                  >
+                    Cancelar edicion
+                  </button>
+                )}
+              </>
             )}
           </div>
 
@@ -516,6 +718,7 @@ function InventarioFarmacia({
                       <button
                         type="button"
                         className="btn-principal"
+                        disabled={cargando || procesando}
                         onClick={() => editar(producto)}
                       >
                         Editar
@@ -524,7 +727,8 @@ function InventarioFarmacia({
                       <button
                         type="button"
                         className="btn btn-danger"
-                        onClick={() => eliminar(producto.id)}
+                        disabled={cargando || procesando}
+                        onClick={() => seleccionarEliminar(producto)}
                       >
                         Eliminar
                       </button>
@@ -539,7 +743,7 @@ function InventarioFarmacia({
           </table>
         </div>
 
-        {productosFiltrados.length === 0 && (
+        {!cargando && !errorCarga && productosFiltrados.length === 0 && (
           <p>No se encontraron productos</p>
         )}
 

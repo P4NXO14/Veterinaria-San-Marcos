@@ -1,13 +1,8 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-
-import type { Sesion } from "../datos/usuarios";
-import type { ProductoFarmacia } from "../datos/productosFarmacia";
-
-import {
-  obtenerProductosFarmacia,
-  guardarProductosFarmacia
-} from "../datos/productosFarmacia";
+import {useEffect,useState} from "react";
+import {Link,useNavigate} from "react-router-dom";
+import type {Sesion} from "../datos/usuarios";
+import {crearPedidoServidor,obtenerProductosServidor} from "../datos/farmaciaApi";
+import type {ProductoServidor} from "../datos/farmaciaApi";
 
 interface FarmaciaProps {
   sesion: Sesion | null;
@@ -22,17 +17,48 @@ function formatearPrecio(precio: number): string {
   return `$${precio.toLocaleString("es-CL")}`;
 }
 
-function Farmacia({ sesion }: FarmaciaProps) {
+function Farmacia({sesion}: FarmaciaProps) {
   const navigate = useNavigate();
 
-  const [productos, setProductos] = useState<ProductoFarmacia[]>(
-    obtenerProductosFarmacia
-  );
+  const [productos,setProductos] = useState<ProductoServidor[]>([]);
+  const [carrito,setCarrito] = useState<ProductoCarrito[]>([]);
+  const [busqueda,setBusqueda] = useState("");
+  const [categoria,setCategoria] = useState("Todas");
+  const [mensaje,setMensaje] = useState("");
+  const [clave,setClave] = useState("");
+  const [cargando,setCargando] = useState(true);
+  const [enviando,setEnviando] = useState(false);
+  const [errorCarga,setErrorCarga] = useState("");
 
-  const [carrito, setCarrito] = useState<ProductoCarrito[]>([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [categoria, setCategoria] = useState("Todas");
-  const [mensaje, setMensaje] = useState("");
+  useEffect(() => {
+    let activo = true;
+
+    obtenerProductosServidor()
+      .then((datos) => {
+        if (activo) {
+          setProductos(datos);
+          setErrorCarga("");
+        }
+      })
+      .catch((error: unknown) => {
+        if (activo) {
+          setErrorCarga(
+            error instanceof Error
+              ? error.message
+              : "No se pudieron cargar los productos"
+          );
+        }
+      })
+      .finally(() => {
+        if (activo) {
+          setCargando(false);
+        }
+      });
+
+    return () => {
+      activo = false;
+    };
+  }, []);
 
   const categorias = [
     "Todas",
@@ -59,45 +85,43 @@ function Farmacia({ sesion }: FarmaciaProps) {
     );
 
     return producto
-      ? [{ producto, cantidad: item.cantidad }]
+      ? [{producto,cantidad: item.cantidad}]
       : [];
   });
 
   const totalCarrito = detalleCarrito.reduce(
-    (total, item) =>
+    (total,item) =>
       total + item.producto.precio * item.cantidad,
     0
   );
 
-  function agregarAlCarrito(producto: ProductoFarmacia) {
+  async function actualizarProductos() {
+    const datos = await obtenerProductosServidor();
+    setProductos(datos);
+    setErrorCarga("");
+  }
 
+  function agregarAlCarrito(producto: ProductoServidor) {
     if (!sesion) {
-      const confirmar = window.confirm(
-        "Debes iniciar sesion o registrarte para agregar productos al carrito ¿Deseas ir a iniciar sesion?"
+      localStorage.setItem(
+        "destinoSanMarcos",
+        "/farmacia"
       );
 
-      if (confirmar) {
-        localStorage.setItem(
-          "destinoSanMarcos",
-          "/farmacia"
-        );
-
-        navigate("/login");
-      }
-
+      navigate("/login");
       return;
     }
 
     if (sesion.rol !== "cliente") {
       setMensaje(
-        "Solo los clientes pueden realizar compras de prueba."
+        "Solo los clientes pueden realizar compras de prueba"
       );
       return;
     }
 
     if (producto.requiereReceta) {
       setMensaje(
-        "Este producto requiere validacion de receta."
+        "Este producto requiere validacion de receta"
       );
       return;
     }
@@ -108,7 +132,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
 
     if (cantidadActual >= producto.stock) {
       setMensaje(
-        "No hay mas unidades disponibles de este producto."
+        "No hay mas unidades disponibles de este producto"
       );
       return;
     }
@@ -135,7 +159,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
     }
 
     setMensaje(
-      `${producto.nombre} agregado al carrito.`
+      `${producto.nombre} agregado al carrito`
     );
   }
 
@@ -147,12 +171,10 @@ function Farmacia({ sesion }: FarmaciaProps) {
         }
 
         if (item.cantidad > 1) {
-          return [
-            {
-              ...item,
-              cantidad: item.cantidad - 1
-            }
-          ];
+          return [{
+            ...item,
+            cantidad: item.cantidad - 1
+          }];
         }
 
         return [];
@@ -162,46 +184,29 @@ function Farmacia({ sesion }: FarmaciaProps) {
     setMensaje("");
   }
 
-  function confirmarCompra() {
+  async function confirmarCompra() {
+    if (enviando) {
+      return;
+    }
+
     if (!sesion || sesion.rol !== "cliente") {
       setMensaje(
-        "Debes iniciar sesion como cliente."
+        "Debes iniciar sesion como cliente"
       );
       return;
     }
 
     if (carrito.length === 0) {
-      setMensaje("El carrito esta vacio.");
+      setMensaje("El carrito esta vacio");
       return;
     }
 
-    // Consultar nuevamente el inventario guardado
-
-    const inventarioActual = obtenerProductosFarmacia();
-
-    const sinDisponibilidad = carrito.some((item) => {
-      const producto = inventarioActual.find(
-        (actual) => actual.id === item.id
-      );
-
-      return (
-        !producto ||
-        producto.requiereReceta ||
-        producto.stock < item.cantidad
-      );
-    });
-
-    if (sinDisponibilidad) {
-      setProductos(inventarioActual);
-
+    if (!clave) {
       setMensaje(
-        "El inventario cambio. Revisa las cantidades del carrito"
+        "Ingresa tu contraseña para confirmar la compra"
       );
-
       return;
     }
-
-    // Confirmar la compra simulada
 
     const aceptada = window.confirm(
       "¿Confirmas esta compra de prueba? Se descontara stock, pero no se realizara ningun pago"
@@ -211,53 +216,51 @@ function Farmacia({ sesion }: FarmaciaProps) {
       return;
     }
 
-    // Descontar las unidades compradas del inventario
+    setEnviando(true);
+    setMensaje("");
 
-    const inventarioActualizado = inventarioActual.map(
-      (producto) => {
-        const cantidad = carrito.find(
-          (item) => item.id === producto.id
-        )?.cantidad ?? 0;
+    try {
+      const pedido = await crearPedidoServidor(
+        carrito.map((item) => ({
+          id: item.id,
+          cantidad: item.cantidad
+        })),
+        {
+          correo: sesion.correo,
+          password: clave
+        }
+      );
 
-        return {
-          ...producto,
-          stock: producto.stock - cantidad
-        };
+      setCarrito([]);
+      setMensaje(
+        `Compra de prueba registrada, pedido N° ${pedido.id}, total: ${formatearPrecio(pedido.total)}`
+      );
+
+      try {
+        await actualizarProductos();
+      } catch {
+        setErrorCarga(
+          "La compra se registro, pero no se pudo actualizar el catalogo, recarga la pagina"
+        );
       }
-    );
+    } catch (error) {
+      setMensaje(
+        error instanceof Error
+          ? error.message
+          : "No se pudo registrar la compra"
+      );
 
-    guardarProductosFarmacia(inventarioActualizado);
-
-    setProductos(inventarioActualizado);
-    setCarrito([]);
-
-    setMensaje(
-      "Compra de prueba registrada y stock actualizado."
-    );
-  }
-
-  // Restringir el acceso del administrador y recepcionista
-
-  if (sesion && sesion.rol !== "cliente") {
-    return (
-      <main className="contenedor-principal">
-        <h1>Acceso restringido</h1>
-
-        <p>
-          La farmacia esta disponible solamente
-          para visitantes y clientes de la veterinaria.
-        </p>
-
-        <p>
-          Para gestionar productos, precios y existencias,
-          utiliza la seccion Inventario
-        </p>
-
-        <Link to="/inventario-farmacia">
-          Ir al Inventario
-        </Link>
-      </main>
-    );
+      try {
+        await actualizarProductos();
+      } catch {
+        setErrorCarga(
+          "No se pudo actualizar la disponibilidad, comprueba que Farmacia este iniciado"
+        );
+      }
+    } finally {
+      setClave("");
+      setEnviando(false);
+    }
   }
 
   return (
@@ -271,6 +274,18 @@ function Farmacia({ sesion }: FarmaciaProps) {
           Catalogo de demostracion sin pagos reales
         </p>
       </header>
+
+      {cargando && (
+        <p role="status">
+          Cargando productos desde el servidor...
+        </p>
+      )}
+
+      {errorCarga && (
+        <p className="farmacia-mensaje" role="alert">
+          {errorCarga}
+        </p>
+      )}
 
       <div className="farmacia-layout">
 
@@ -337,7 +352,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
                 producto.stock - enCarrito;
 
               const descuento =
-                producto.precioAnterior &&
+                producto.precioAnterior != null &&
                 producto.precioAnterior > producto.precio
                   ? Math.round(
                       (
@@ -384,7 +399,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
 
                     <div className="farmacia-precios">
 
-                      {producto.precioAnterior && (
+                      {producto.precioAnterior != null && (
                         <span className="farmacia-precio-anterior">
                           {formatearPrecio(
                             producto.precioAnterior
@@ -426,7 +441,12 @@ function Farmacia({ sesion }: FarmaciaProps) {
                     ) : (
                       <button
                         type="button"
-                        disabled={disponibles <= 0}
+                        disabled={
+                          disponibles <= 0 ||
+                          cargando ||
+                          enviando ||
+                          Boolean(errorCarga)
+                        }
                         onClick={() =>
                           agregarAlCarrito(producto)
                         }
@@ -445,7 +465,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
 
           </div>
 
-          {productosFiltrados.length === 0 && (
+          {!cargando && !errorCarga && productosFiltrados.length === 0 && (
             <p>
               No se encontraron productos para esa busqueda
             </p>
@@ -485,6 +505,7 @@ function Farmacia({ sesion }: FarmaciaProps) {
 
                     <button
                       type="button"
+                      disabled={enviando}
                       onClick={() =>
                         quitarDelCarrito(
                           item.producto.id
@@ -513,16 +534,41 @@ function Farmacia({ sesion }: FarmaciaProps) {
             </strong>
           </div>
 
+          {sesion?.rol === "cliente" && carrito.length > 0 && (
+            <div>
+              <label htmlFor="farmaciaClave">
+                Contraseña para confirmar la compra
+              </label>
+
+              <input
+                id="farmaciaClave"
+                type="password"
+                value={clave}
+                onChange={(evento) =>
+                  setClave(evento.target.value)
+                }
+                autoComplete="current-password"
+                disabled={enviando}
+                placeholder="Ingresa tu contraseña"
+              />
+            </div>
+          )}
+
           <button
             type="button"
             className="farmacia-comprar"
             disabled={
               carrito.length === 0 ||
-              sesion?.rol !== "cliente"
+              sesion?.rol !== "cliente" ||
+              cargando ||
+              enviando ||
+              Boolean(errorCarga)
             }
             onClick={confirmarCompra}
           >
-            Confirmar compra de prueba
+            {enviando
+              ? "Registrando compra..."
+              : "Confirmar compra de prueba"}
           </button>
 
           {sesion?.rol !== "cliente" && (
@@ -532,7 +578,8 @@ function Farmacia({ sesion }: FarmaciaProps) {
           )}
 
           <p className="farmacia-nota">
-            Los productos que requieren receta no pueden comprarse desde este prototipo
+            Los productos que requieren receta
+            no pueden comprarse desde este prototipo
           </p>
 
           {sesion?.rol === "cliente" && (
