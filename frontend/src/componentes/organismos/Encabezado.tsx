@@ -1,30 +1,22 @@
-import { useState } from "react";
-
+import {useState} from "react";
 import Logo from "../atomos/logo";
 import EnlaceNavegacion from "../atomos/EnlaceNavegacion";
-
-import type { Sesion } from "../../datos/usuarios";
+import {enlacesNavegacion} from "../../datos/navegacion";
+import type {Sesion} from "../../datos/usuarios";
 
 interface EncabezadoProps {
   sesion: Sesion | null;
   onCerrarSesion: () => void;
 }
 
-function Encabezado({
-  sesion,
-  onCerrarSesion
-}: EncabezadoProps) {
-  const [menuAbierto, setMenuAbierto] = useState(false);
+function Encabezado({sesion,onCerrarSesion}: EncabezadoProps) {
+  const [menuAbierto,setMenuAbierto] = useState(false);
 
-  const esCliente = sesion?.rol === "cliente";
+  const rolActual = sesion?.rol ?? "visitante";
 
-  const esPersonal =
-    sesion?.rol === "recepcionista" ||
-    sesion?.rol === "admin";
-
-  const esAdministrador = sesion?.rol === "admin";
-
-  const puedeVerCatalogos = !sesion || esCliente;
+  const enlacesVisibles = enlacesNavegacion.filter((enlace) =>
+    enlace.roles.some((rol) => rol === rolActual)
+  );
 
   function cerrarMenu() {
     setMenuAbierto(false);
@@ -38,7 +30,7 @@ function Encabezado({
   return (
     <header
       className="d-flex flex-wrap justify-content-between align-items-center gap-3 p-3"
-      style={{ backgroundColor: "#113150" }}
+      style={{backgroundColor: "#113150"}}
     >
       <Logo />
 
@@ -55,65 +47,19 @@ function Encabezado({
 
       <nav
         id="menu-principal"
-        className={`${
-          menuAbierto ? "d-flex" : "d-none"
-        } d-lg-flex flex-column flex-lg-row gap-3`}
+        className={`${menuAbierto ? "d-flex" : "d-none"} d-lg-flex flex-column flex-lg-row gap-3`}
         aria-label="Navegacion principal"
         onClick={cerrarMenu}
       >
-        <EnlaceNavegacion destino="/" texto="Inicio" />
-
-        <EnlaceNavegacion
-          destino="/nosotros"
-          texto="Nosotros"
-        />
-
-        {puedeVerCatalogos && (
-          <>
-            <EnlaceNavegacion
-              destino="/servicios"
-              texto="Servicios"
-            />
-
-            <EnlaceNavegacion
-              destino="/farmacia"
-              texto="Farmacia"
-            />
-
-            <EnlaceNavegacion
-              destino="/contacto"
-              texto="Contacto"
-            />
-
-            <EnlaceNavegacion
-              destino="/reserva"
-              texto="Mis Citas"
-            />
-          </>
-        )}
-
-        {esPersonal && (
-          <>
-            <EnlaceNavegacion
-              destino="/recepcion"
-              texto="Recepcion"
-            />
-
-            <EnlaceNavegacion
-              destino="/inventario-farmacia"
-              texto="Inventario"
-            />
-          </>
-        )}
-
-        {esAdministrador && (
+        {enlacesVisibles.map((enlace) => (
           <EnlaceNavegacion
-            destino="/admin"
-            texto="Administracion"
+            key={enlace.texto}
+            destino={enlace.destino}
+            texto={enlace.texto}
           />
-        )}
+        ))}
 
-        {sesion ? (
+        {sesion && (
           <>
             <span className="text-white">
               Hola, {sesion.nombre}
@@ -126,18 +72,6 @@ function Encabezado({
             >
               Cerrar Sesion
             </button>
-          </>
-        ) : (
-          <>
-            <EnlaceNavegacion
-              destino="/registro"
-              texto="Registro"
-            />
-
-            <EnlaceNavegacion
-              destino="/login"
-              texto="Iniciar Sesion"
-            />
           </>
         )}
       </nav>

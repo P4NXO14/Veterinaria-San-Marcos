@@ -3,6 +3,7 @@ import {Routes,Route,useNavigate} from "react-router-dom";
 import type {Sesion} from "./datos/usuarios";
 import {limpiarCredencialesReservas} from "./datos/citasApi";
 import Encabezado from "./componentes/organismos/Encabezado";
+import AccesoReservas from "./componentes/organismos/AccesoReservas";
 import Inicio from "./paginas/Inicio";
 import Login from "./paginas/Login";
 import Registro from "./paginas/Registro";
@@ -105,12 +106,25 @@ function App() {
 
         <Route
           path="/reserva"
-          element={<Reserva sesion={sesion} />}
+          element={
+            <Reserva
+              key={sesion?.correo ?? ""}
+              sesion={sesion}
+            />
+          }
         />
 
         <Route
           path="/recepcion"
-          element={<Recepcion sesion={sesion} />}
+          element={
+            <AccesoReservas
+              key={`recepcion-${sesion?.correo ?? ""}`}
+              sesion={sesion}
+              tipo="personal"
+            >
+              <Recepcion sesion={sesion} />
+            </AccesoReservas>
+          }
         />
 
         <Route

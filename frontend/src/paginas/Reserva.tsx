@@ -1,8 +1,9 @@
 import {useEffect,useState} from "react";
+import type {FormEvent} from "react";
 import {Link} from "react-router-dom";
 import FormularioCita from "../componentes/organismos/FormularioCita";
 import ListadoCitas from "../componentes/organismos/ListadoCitas";
-import {obtenerCitasServidor} from "../datos/citasApi";
+import {guardarCredencialesReservas,limpiarCredencialesReservas,obtenerCitasServidor} from "../datos/citasApi";
 import {obtenerProfesionalesServidor,obtenerServiciosServidor} from "../datos/catalogoApi";
 import type {CitaServidor} from "../datos/citasApi";
 import type {Servicio} from "../datos/servicios";
@@ -17,7 +18,11 @@ function Reserva({sesion}: ReservaProps) {
   const [citas,setCitas] = useState<CitaServidor[]>([]);
   const [servicios,setServicios] = useState<Servicio[]>([]);
   const [profesionales,setProfesionales] = useState<Profesional[]>([]);
+  const [clave,setClave] = useState("");
+  const [autorizado,setAutorizado] = useState(false);
+  const [verificando,setVerificando] = useState(false);
   const [cargando,setCargando] = useState(false);
+  const [errorAcceso,setErrorAcceso] = useState("");
   const [error,setError] = useState("");
   const [errorCatalogo,setErrorCatalogo] = useState("");
 
@@ -26,44 +31,12 @@ function Reserva({sesion}: ReservaProps) {
   const controlesRealizados = citas.filter((cita) => cita.estado === "Atendida");
 
   useEffect(() => {
-    let activo = true;
-
-    if (!correo) {
-      setCitas([]);
-      setError("");
-      setCargando(false);
-      return;
-    }
-
-    setCargando(true);
-    setError("");
-    setCitas([]);
-
-    obtenerCitasServidor(correo)
-      .then((datos) => {
-        if (activo) {
-          setCitas(datos);
-        }
-      })
-      .catch((fallo: unknown) => {
-        if (activo) {
-          setError(
-            fallo instanceof Error
-              ? fallo.message
-              : "No se pudieron cargar las citas"
-          );
-        }
-      })
-      .finally(() => {
-        if (activo) {
-          setCargando(false);
-        }
-      });
+    limpiarCredencialesReservas();
 
     return () => {
-      activo = false;
+      limpiarCredencialesReservas();
     };
-  },[correo]);
+  },[]);
 
   useEffect(() => {
     if (!correo) {
@@ -98,21 +71,67 @@ function Reserva({sesion}: ReservaProps) {
     };
   },[correo]);
 
-  async function actualizarCitas() {
-    if (!correo) {
+  async function ingresarMisCitas(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+
+    if (!correo || verificando) {
       return;
     }
+
+    if (!clave.trim()) {
+      setErrorAcceso("Debes ingresar tu contraseña para consultar tus citas");
+      return;
+    }
+
+    setVerificando(true);
+    setErrorAcceso("");
+    guardarCredencialesReservas(correo,clave);
+
+    try {
+      const datos = await obtenerCitasServidor(correo);
+      setCitas(datos);
+      setAutorizado(true);
+      setError("");
+      setClave("");
+    } catch (fallo) {
+      limpiarCredencialesReservas();
+      setAutorizado(false);
+      setCitas([]);
+      setErrorAcceso(
+        fallo instanceof Error
+          ? fallo.message
+          : "No se pudo verificar tu contraseña"
+      );
+    } finally {
+      setVerificando(false);
+    }
+  }
+
+  async function actualizarCitas() {
+    if (!correo || !autorizado) {
+      return;
+    }
+
+    setCargando(true);
 
     try {
       const datos = await obtenerCitasServidor(correo);
       setCitas(datos);
       setError("");
     } catch (fallo) {
-      setError(
-        fallo instanceof Error
-          ? fallo.message
-          : "No se pudieron actualizar las citas"
-      );
+      const mensaje = fallo instanceof Error
+        ? fallo.message
+        : "No se pudieron actualizar las citas";
+
+      if (mensaje.includes("vuelve a autorizar Reservas")) {
+        setAutorizado(false);
+        setCitas([]);
+        setErrorAcceso(mensaje);
+      } else {
+        setError(mensaje);
+      }
+    } finally {
+      setCargando(false);
     }
   }
 
@@ -159,34 +178,92 @@ function Reserva({sesion}: ReservaProps) {
           La recepcionista puede confirmarla o proponer otro horario
         </p>
 
+        {!autorizado && (
+          <p>
+            Para enviar una solicitud, ingresa primero tu contraseña en
+            <a href="#acceso-mis-citas"> Estado de mis citas</a>
+          </p>
+        )}
+
         <FormularioCita
           sesion={sesion}
           onCitaCreada={actualizarCitas}
         />
       </section>
 
-      <section className="seccion-separada">
+      <section className="seccion-separada" id="acceso-mis-citas">
         <h2>Estado de mis citas</h2>
 
-        {cargando && (
+        {!autorizado && (
+          <>
+            <p>
+              Ingresa tu contraseña para consultar tus citas e historial de controles
+            </p>
+
+            <form
+              className="mb-3"
+              onSubmit={(evento) => {void ingresarMisCitas(evento);}}
+            >
+              <label htmlFor="claveMisCitas" className="form-label">
+                Contraseña de tu cuenta
+              </label>
+
+              <div className="d-flex flex-wrap gap-2">
+                <input
+                  id="claveMisCitas"
+                  type="password"
+                  className="form-control"
+                  style={{maxWidth: "300px"}}
+                  autoComplete="current-password"
+                  placeholder="Ingresa tu contraseña"
+                  value={clave}
+                  onChange={(evento) => {
+                    setClave(evento.target.value);
+                    setErrorAcceso("");
+                  }}
+                  disabled={verificando}
+                />
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={verificando}
+                >
+                  {verificando ? "Verificando" : "Consultar mis citas"}
+                </button>
+              </div>
+            </form>
+
+            {errorAcceso && (
+              <p
+                className="mensaje-formulario mensaje-error"
+                role="alert"
+              >
+                {errorAcceso}
+              </p>
+            )}
+          </>
+        )}
+
+        {autorizado && cargando && (
           <p role="status">
             Cargando citas
           </p>
         )}
 
-        {error && (
+        {autorizado && error && (
           <p className="mensaje-formulario mensaje-error" role="alert">
             {error}
           </p>
         )}
 
-        {errorCatalogo && (
+        {autorizado && errorCatalogo && (
           <p className="mensaje-formulario mensaje-error" role="alert">
             {errorCatalogo}
           </p>
         )}
 
-        {!cargando && !error && (
+        {autorizado && !cargando && !error && (
           <ListadoCitas
             citas={citasPendientes}
             servicios={servicios}
@@ -198,15 +275,19 @@ function Reserva({sesion}: ReservaProps) {
       <section className="seccion-separada">
         <h2>Historial de controles</h2>
 
-        {cargando && (
-          <p role="status">Cargando historial</p>
+        {autorizado && cargando && (
+          <p role="status">
+            Cargando historial
+          </p>
         )}
 
-        {!cargando && !error && controlesRealizados.length === 0 && (
-          <p>Aun no tienes controles registrados</p>
+        {autorizado && !cargando && !error && controlesRealizados.length === 0 && (
+          <p>
+            Aun no tienes controles registrados
+          </p>
         )}
 
-        {!cargando && !error && controlesRealizados.length > 0 && (
+        {autorizado && !cargando && !error && controlesRealizados.length > 0 && (
           <ListadoCitas
             citas={controlesRealizados}
             servicios={servicios}
