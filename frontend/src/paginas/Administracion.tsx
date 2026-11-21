@@ -5,6 +5,7 @@ import {cambiarEstadoPersonalAdministrador,crearPersonalAdministrador,editarPers
 import type {CredencialesAdministrador,UsuarioAdministracion} from "../datos/usuariosAdminApi";
 import FormularioEditarPersonal from "../componentes/organismos/FormularioEditarPersonal";
 import FormularioAgregarPersonal from "../componentes/organismos/FormularioAgregarPersonal";
+import ServiciosDestacadosAdmin from "../componentes/organismos/ServiciosDestacadosAdmin";
 
 interface AdministracionProps {
   sesion: Sesion | null;
@@ -429,6 +430,8 @@ function Administracion({sesion}: AdministracionProps) {
               </tbody>
             </table>
           </div>
+
+          <ServiciosDestacadosAdmin credenciales={{correo: sesion.correo,password: clave}} />
         </>
       )}
     </main>

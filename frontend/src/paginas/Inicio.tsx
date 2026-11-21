@@ -1,7 +1,7 @@
 import {useEffect,useState} from "react";
 import {Link,useNavigate} from "react-router-dom";
 import TarjetaServicio from "../componentes/moleculas/TarjetaServicio";
-import {obtenerServiciosServidor} from "../datos/catalogoApi";
+import {obtenerServiciosDestacadosServidor} from "../datos/catalogoApi";
 import type {Servicio} from "../datos/servicios";
 import type {Sesion} from "../datos/usuarios";
 
@@ -19,7 +19,7 @@ function Inicio({sesion}: InicioProps) {
   useEffect(() => {
     let activo = true;
 
-    obtenerServiciosServidor()
+    obtenerServiciosDestacadosServidor()
       .then((datos) => {
         if (activo) {
           setServicios(datos);
@@ -113,7 +113,7 @@ function Inicio({sesion}: InicioProps) {
 
         {!cargando && !error && (
           <div id="contenedor-servicios">
-            {servicios.slice(0,6).map((servicio) => (
+            {servicios.map((servicio) => (
               <TarjetaServicio
                 key={servicio.id}
                 servicio={servicio}

@@ -105,3 +105,44 @@ await verificarRespuesta(respuesta,"Compatibilidad de profesionales");
 
 return (await respuesta.json()) as string[];
 }
+
+export async function obtenerServiciosDestacadosServidor(): Promise<Servicio[]> {
+const respuesta = await fetch(`${URL_SERVICIOS}/destacados`,{cache: "no-store"});
+await verificarRespuesta(respuesta,"Servicios destacados");
+
+const datos = (await respuesta.json()) as ServicioServidor[];
+return datos.map(convertirServicio);
+}
+
+export async function cambiarServicioDestacadoServidor(
+    codigo: string,
+    destacado: boolean,
+    credenciales: {correo: string;password: string}
+): Promise<void> {
+const bytes = new TextEncoder().encode(`${credenciales.correo}:${credenciales.password}`);
+const base64 = btoa(Array.from(bytes,(byte) => String.fromCharCode(byte)).join(""));
+
+const respuesta = await fetch(`${URL_SERVICIOS}/codigo/${encodeURIComponent(codigo)}/destacado`,{
+    method: "PATCH",
+    headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${base64}`
+    },
+    body: JSON.stringify({destacado})
+});
+
+if (respuesta.ok) {
+    return;
+}
+
+const mensajes: Record<number,string> = {
+    400: "La solicitud no es valida",
+    401: "Correo o contraseña incorrectos",
+    403: "Solo el administrador puede modificar los destacados",
+    404: "El servicio no existe",
+    409: "Solo puedes destacar hasta 6 servicios",
+    503: "El microservicio Usuarios no esta disponible"
+};
+
+throw new Error(mensajes[respuesta.status] ?? `No se pudo actualizar el servicio (HTTP ${respuesta.status})`);
+}

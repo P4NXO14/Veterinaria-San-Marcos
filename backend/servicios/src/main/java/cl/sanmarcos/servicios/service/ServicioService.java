@@ -3,23 +3,31 @@ package cl.sanmarcos.servicios.service;
 import cl.sanmarcos.servicios.dto.ServicioResponse;
 import cl.sanmarcos.servicios.model.Compatibilidad;
 import cl.sanmarcos.servicios.model.Servicio;
+import cl.sanmarcos.servicios.model.ServicioDestacado;
 import cl.sanmarcos.servicios.repository.CompatibilidadRepository;
 import cl.sanmarcos.servicios.repository.ServicioRepository;
+import cl.sanmarcos.servicios.repository.ServicioDestacadoRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ServicioService {
     private final ServicioRepository servicioRepository;
     private final CompatibilidadRepository compatibilidadRepository;
+    private final ServicioDestacadoRepository destacadoRepository;
+    private final AutorizacionServicios autorizacion;
 
-    public ServicioService(ServicioRepository servicioRepository, CompatibilidadRepository compatibilidadRepository) {
+    public ServicioService(ServicioRepository servicioRepository, CompatibilidadRepository compatibilidadRepository, ServicioDestacadoRepository destacadoRepository, AutorizacionServicios autorizacion) {
         this.servicioRepository = servicioRepository;
         this.compatibilidadRepository = compatibilidadRepository;
+        this.destacadoRepository = destacadoRepository;
+        this.autorizacion = autorizacion;
     }
 
     @Transactional(readOnly = true)
@@ -27,6 +35,36 @@ public class ServicioService {
         return servicioRepository.findAllByOrderByIdAsc().stream()
             .map(this::convertir)
             .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ServicioResponse> listarDestacados() {
+        Set<String> codigos = destacadoRepository.findAll().stream()
+            .map(ServicioDestacado::getCodigo)
+            .collect(Collectors.toSet());
+
+        return servicioRepository.findAllByOrderByIdAsc().stream()
+            .filter(servicio -> codigos.contains(servicio.getCodigo()))
+            .map(this::convertir)
+            .toList();
+    }
+
+    @Transactional
+    public void cambiarDestacado(String codigo,boolean destacar,String credenciales) {
+        autorizacion.exigirAdministrador(credenciales);
+
+        Servicio servicio = obtenerPorCodigo(codigo);
+        String codigoReal = servicio.getCodigo();
+
+        if (destacar && !destacadoRepository.existsById(codigoReal)) {
+            if (destacadoRepository.count() >= 6) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"Solo puedes destacar hasta 6 servicios");
+            }
+
+            destacadoRepository.save(new ServicioDestacado(codigoReal));
+        } else if (!destacar && destacadoRepository.existsById(codigoReal)) {
+            destacadoRepository.deleteById(codigoReal);
+        }
     }
 
     @Transactional(readOnly = true)
