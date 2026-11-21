@@ -22,6 +22,8 @@ function Reserva({sesion}: ReservaProps) {
   const [errorCatalogo,setErrorCatalogo] = useState("");
 
   const correo = sesion?.rol === "cliente" ? sesion.correo : null;
+  const citasPendientes = citas.filter((cita) => cita.estado !== "Atendida");
+  const controlesRealizados = citas.filter((cita) => cita.estado === "Atendida");
 
   useEffect(() => {
     let activo = true;
@@ -186,7 +188,27 @@ function Reserva({sesion}: ReservaProps) {
 
         {!cargando && !error && (
           <ListadoCitas
-            citas={citas}
+            citas={citasPendientes}
+            servicios={servicios}
+            profesionales={profesionales}
+          />
+        )}
+      </section>
+
+      <section className="seccion-separada">
+        <h2>Historial de controles</h2>
+
+        {cargando && (
+          <p role="status">Cargando historial</p>
+        )}
+
+        {!cargando && !error && controlesRealizados.length === 0 && (
+          <p>Aun no tienes controles registrados</p>
+        )}
+
+        {!cargando && !error && controlesRealizados.length > 0 && (
+          <ListadoCitas
+            citas={controlesRealizados}
             servicios={servicios}
             profesionales={profesionales}
           />

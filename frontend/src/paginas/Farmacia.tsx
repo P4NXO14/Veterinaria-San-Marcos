@@ -103,6 +103,14 @@ function Farmacia({sesion}: FarmaciaProps) {
 
   function agregarAlCarrito(producto: ProductoServidor) {
     if (!sesion) {
+      const continuar = window.confirm(
+        "Debes iniciar sesion como cliente para agregar productos al carrito ¿Deseas continuar?"
+      );
+
+      if (!continuar) {
+        return;
+      }
+
       localStorage.setItem(
         "destinoSanMarcos",
         "/farmacia"

@@ -1,7 +1,7 @@
 import {useState} from "react";
 import type {FormEvent} from "react";
 import type {Sesion,DatosEdicionPersonal,DatosNuevoPersonal} from "../datos/usuarios";
-import {cambiarEstadoPersonalAdministrador,crearPersonalAdministrador,editarPersonalAdministrador,eliminarPersonalAdministrador,listarUsuariosAdministrador} from "../datos/usuariosAdminApi";
+import {cambiarEstadoPersonalAdministrador,crearPersonalAdministrador,editarPersonalAdministrador,eliminarClienteAdministrador,eliminarPersonalAdministrador,listarUsuariosAdministrador} from "../datos/usuariosAdminApi";
 import type {CredencialesAdministrador,UsuarioAdministracion} from "../datos/usuariosAdminApi";
 import FormularioEditarPersonal from "../componentes/organismos/FormularioEditarPersonal";
 import FormularioAgregarPersonal from "../componentes/organismos/FormularioAgregarPersonal";
@@ -20,6 +20,7 @@ function Administracion({sesion}: AdministracionProps) {
   const [mostrarAgregar,setMostrarAgregar] = useState(false);
   const [cargando,setCargando] = useState(false);
   const [procesando,setProcesando] = useState(false);
+  const [clientePorEliminar,setClientePorEliminar] = useState<number | null>(null);
 
   function mostrarMensaje(texto: string,tipo: "exito" | "error") {
     setMensaje(texto);
@@ -41,6 +42,7 @@ function Administracion({sesion}: AdministracionProps) {
     setUsuarios([]);
     setUsuarioEditando(null);
     setMostrarAgregar(false);
+    setClientePorEliminar(null);
     setMensaje("");
   }
 
@@ -163,6 +165,22 @@ function Administracion({sesion}: AdministracionProps) {
 
     if (correcto && usuarioEditando?.id === usuario.id) {
       setUsuarioEditando(null);
+    }
+  }
+
+  async function eliminarCliente(usuario: UsuarioAdministracion) {
+    if (usuario.rol !== "cliente" || procesando) {
+      mostrarMensaje("Solo puedes eliminar cuentas de clientes","error");
+      return;
+    }
+
+    const correcto = await ejecutarOperacion(
+      (credenciales) => eliminarClienteAdministrador(usuario.id,credenciales),
+      "Cuenta del cliente eliminada correctamente"
+    );
+
+    if (correcto) {
+      setClientePorEliminar(null);
     }
   }
 
@@ -367,6 +385,37 @@ function Administracion({sesion}: AdministracionProps) {
                             Eliminar
                           </button>
                         </div>
+                      ) : usuario.rol === "cliente" ? (
+                        clientePorEliminar === usuario.id ? (
+                          <div className="d-flex flex-wrap align-items-center gap-2">
+                            <span>¿Eliminar definitivamente esta cuenta?</span>
+                            <button
+                              type="button"
+                              className="btn btn-danger btn-sm"
+                              disabled={procesando || cargando}
+                              onClick={() => {void eliminarCliente(usuario);}}
+                            >
+                              Confirmar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              disabled={procesando || cargando}
+                              onClick={() => setClientePorEliminar(null)}
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            disabled={procesando || cargando}
+                            onClick={() => setClientePorEliminar(usuario.id)}
+                          >
+                            Eliminar
+                          </button>
+                        )
                       ) : (
                         <span>
                           {usuario.rol === "admin"

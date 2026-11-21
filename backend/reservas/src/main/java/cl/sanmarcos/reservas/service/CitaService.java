@@ -15,6 +15,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Locale;
 
@@ -90,6 +93,23 @@ public class CitaService {
 
         validarTransicion(estadoAnterior, estadoNuevo);
 
+        if ("Atendida".equals(estadoNuevo)) {
+            try {
+                LocalDateTime fechaCita = LocalDateTime.parse(actual.getFecha() + "T" + actual.getHora());
+
+                if (fechaCita.isAfter(LocalDateTime.now(ZoneId.of("America/Santiago")))) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No puedes registrar asistencia antes de la fecha y hora de la cita");
+                }
+            } catch (DateTimeParseException error) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La fecha u hora de la cita no es valida");
+            }
+
+            actual.setEstado("Atendida");
+            actual.setFechaPropuesta("");
+            actual.setHoraPropuesta("");
+            return repository.save(actual);
+        }
+
         if ("Cancelada".equals(estadoNuevo)) {
             actual.setEstado(estadoNuevo);
             actual.setFechaPropuesta("");
@@ -148,6 +168,11 @@ public class CitaService {
 
     public void eliminar(Long id) {
         Cita cita = buscar(id);
+
+        if ("Atendida".equals(cita.getEstado())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "No puedes eliminar una cita con asistencia registrada");
+        }
+
         repository.delete(cita);
     }
 
@@ -223,6 +248,7 @@ public class CitaService {
             case "confirmada" -> "Confirmada";
             case "horario propuesto" -> "Horario propuesto";
             case "cancelada" -> "Cancelada";
+            case "atendida" -> "Atendida";
             default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Estado de cita no reconocido");
         };
     }
@@ -233,12 +259,12 @@ public class CitaService {
                 "pendiente", "Confirmada", "Horario propuesto", "Cancelada"
             ).contains(nuevo);
             case "Confirmada" -> List.of(
-                "Confirmada", "Horario propuesto", "Cancelada"
+                "Confirmada", "Horario propuesto", "Cancelada", "Atendida"
             ).contains(nuevo);
             case "Horario propuesto" -> List.of(
                 "Horario propuesto", "Confirmada", "Cancelada"
             ).contains(nuevo);
-            case "Cancelada" -> false;
+            case "Cancelada", "Atendida" -> false;
             default -> false;
         };
 

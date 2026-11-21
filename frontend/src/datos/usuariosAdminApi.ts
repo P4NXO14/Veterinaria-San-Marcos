@@ -94,6 +94,15 @@ await verificarRespuesta(respuesta);
 return (await respuesta.json()) as UsuarioAdministracion;
 }
 
+export async function eliminarClienteAdministrador(id: number,credenciales: CredencialesAdministrador): Promise<void> {
+const respuesta = await fetch(`${API_URL}/clientes/${id}`,{
+    method: "DELETE",
+    headers: {Authorization: obtenerAutorizacion(credenciales)}
+});
+
+await verificarRespuesta(respuesta);
+}
+
 export async function eliminarPersonalAdministrador(id: number,credenciales: CredencialesAdministrador): Promise<void> {
 const respuesta = await fetch(`${API_URL}/personal/${id}`,{
     method: "DELETE",

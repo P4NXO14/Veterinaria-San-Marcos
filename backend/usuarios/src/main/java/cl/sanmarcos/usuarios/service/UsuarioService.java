@@ -132,6 +132,17 @@ public class UsuarioService {
         repository.delete(usuario);
     }
 
+    public void eliminarCliente(Long id) {
+        Usuario usuario = repository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));
+
+        if (!"cliente".equals(usuario.getRol())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo se pueden eliminar cuentas de clientes");
+        }
+
+        repository.delete(usuario);
+    }
+
     private Usuario obtenerPersonal(Long id) {
         Usuario usuario = repository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Usuario no encontrado"));

@@ -22,7 +22,7 @@ public record RegistroRequest(
     String correo,
 
     @NotBlank(message = "La direccion es obligatoria")
-    @Size(max = 300, message = "La direccion admite hasta 300 caracteres")
+    @Size(max = 255, message = "La direccion admite hasta 255 caracteres")
     String direccion,
 
     @NotBlank(message = "La contraseña es obligatoria")

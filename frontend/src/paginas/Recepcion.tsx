@@ -389,6 +389,14 @@ function Recepcion({sesion}: RecepcionProps) {
     }
   }
 
+  async function registrarAsistencia(id: number) {
+    await modificarCita(
+      id,
+      {estado: "Atendida"},
+      "Asistencia registrada correctamente"
+    );
+  }
+
   function abrirPropuesta(id: number) {
     if (procesando) {
       return;
@@ -673,15 +681,29 @@ function Recepcion({sesion}: RecepcionProps) {
                       >
                         Eliminar cita
                       </button>
+                    ) : cita.estado === "Atendida" ? (
+                      <span>Asistencia registrada</span>
                     ) : cita.estado === "Confirmada" ? (
-                      <button
-                        type="button"
-                        className="btn btn-warning"
-                        disabled={cargando || procesando || Boolean(errorCarga)}
-                        onClick={() => {void cancelar(cita.id);}}
-                      >
-                        Cancelar cita
-                      </button>
+                      <>
+                        {new Date(`${cita.fecha}T${cita.hora}:00`).getTime() <= Date.now() && (
+                          <button
+                            type="button"
+                            className="btn-principal"
+                            disabled={cargando || procesando || Boolean(errorCarga)}
+                            onClick={() => {void registrarAsistencia(cita.id);}}
+                          >
+                            Registrar asistencia
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="btn btn-warning"
+                          disabled={cargando || procesando || Boolean(errorCarga)}
+                          onClick={() => {void cancelar(cita.id);}}
+                        >
+                          Cancelar cita
+                        </button>
+                      </>
                     ) : (
                       <>
                         <button
@@ -726,7 +748,8 @@ function Recepcion({sesion}: RecepcionProps) {
 
                   {idEditando === cita.id &&
                     cita.estado !== "Confirmada" &&
-                    cita.estado !== "Cancelada" && (
+                    cita.estado !== "Cancelada" &&
+                    cita.estado !== "Atendida" && (
                     <div className="formulario-propuesta">
                       {cita.profesional ? (
                         <>
@@ -748,15 +771,15 @@ function Recepcion({sesion}: RecepcionProps) {
                             </p>
                           )}
 
-                          {errorCompatibles && (
-                            <p className="mensaje-formulario mensaje-error" role="alert">
-                              {errorCompatibles}
-                            </p>
-                          )}
-
                           {fechaPropuesta && cargandoHoras && (
                             <p role="status">
                               Consultando horarios disponibles
+                            </p>
+                          )}
+
+                          {errorCompatibles && (
+                            <p className="mensaje-formulario mensaje-error" role="alert">
+                              {errorCompatibles}
                             </p>
                           )}
 

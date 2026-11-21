@@ -81,4 +81,10 @@ public class UsuarioController {
         service.eliminarPersonal(id);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/admin/clientes/{id}")
+    public ResponseEntity<Void> eliminarCliente(@PathVariable Long id) {
+        service.eliminarCliente(id);
+        return ResponseEntity.noContent().build();
+    }
 }
