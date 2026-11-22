@@ -401,6 +401,171 @@ Durante el desarrollo se realizaron las siguientes comprobaciones
 
 Las compras de farmacia son simuladas y no procesan pagos reales
 
+### 10.1. Pruebas automatizadas del frontend
+
+Para ejecutar estas pruebas fuera de Docker se necesita Node.js y npm. Abrir PowerShell en la carpeta principal del proyecto y utilizar
+
+```powershell
+cd frontend
+npm ci
+npm run test:run
+npm run test:coverage
+npm run lint
+npm run build
+cd ..
+```
+
+- `npm run test:run`: ejecuta las 21 pruebas Vitest de los seis archivos de prueba
+- `npm run test:coverage`: vuelve a ejecutar las pruebas y genera el reporte de cobertura
+- `npm run lint`: comprueba el código mediante ESLint
+- `npm run build`: comprueba TypeScript y genera la compilación de producción con Vite
+
+El reporte HTML de cobertura se genera en `frontend/coverage/index.html`
+
+
+### 10.2. Pruebas automatizadas de los seis microservicios
+
+Para ejecutar las pruebas JUnit desde Windows se requiere Java 17 y Docker Desktop con MySQL iniciado. Cada microservicio dispone de su propio Maven Wrapper (`mvnw.cmd`) y de sus clases de prueba en `src/test/java`
+
+Todos los comandos se ejecutan desde PowerShell, comenzando en la carpeta principal del proyecto
+
+#### Paso 1 - Iniciar MySQL
+
+```powershell
+docker compose --env-file .env.docker up -d mysql
+docker compose --env-file .env.docker ps -a
+```
+
+Comprobar que MySQL aparezca en estado `healthy` antes de continuar
+
+#### Paso 2 - Configurar las credenciales
+
+Ejecutar una sola vez en PowerShell
+
+```powershell
+$env:SPRING_DATASOURCE_USERNAME = "sanmarcos"
+$env:SPRING_DATASOURCE_PASSWORD = ((Get-Content .env.docker | Where-Object { $_ -match '^MYSQL_APP_PASSWORD=' } | Select-Object -First 1) -split '=', 2)[1]
+```
+
+Estas variables permiten que las pruebas Java se conecten a MySQL mediante el puerto `3307`, utilizado por Docker
+
+#### Paso 3 - Ejecutar las pruebas de cada microservicio
+
+**Usuarios**
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:3307/sanmarcos_usuarios"
+cd backend\usuarios
+.\mvnw.cmd clean verify
+cd ..\..
+```
+
+**Reservas**
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:3307/sanmarcos_reservas"
+cd backend\reservas
+.\mvnw.cmd clean verify
+cd ..\..
+```
+
+**Profesionales**
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:3307/sanmarcos_profesionales"
+cd backend\profesionales
+.\mvnw.cmd clean verify
+cd ..\..
+```
+
+**Contacto**
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:3307/sanmarcos_contacto"
+cd backend\contacto
+.\mvnw.cmd clean verify
+cd ..\..
+```
+
+**Servicios**
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:3307/sanmarcos_servicios"
+cd backend\servicios
+.\mvnw.cmd clean verify
+cd ..\..
+```
+
+**Farmacia**
+
+```powershell
+$env:SPRING_DATASOURCE_URL = "jdbc:mysql://localhost:3307/sanmarcos_farmacia"
+cd backend\farmacia
+.\mvnw.cmd clean verify
+cd ..\..
+```
+
+Cada comando `clean verify` compila el microservicio correspondiente y ejecuta sus pruebas JUnit
+
+Si las pruebas terminan correctamente, Maven mostrará `BUILD SUCCESS` y los resultados de las pruebas ejecutadas
+
+Los resultados detallados pueden consultarse en la carpeta `target/surefire-reports` de cada microservicio
+
+#### Paso 4 - Limpiar las variables temporales
+
+Una vez finalizadas las pruebas, ejecutar
+
+```powershell
+Remove-Item Env:\SPRING_DATASOURCE_URL, Env:\SPRING_DATASOURCE_USERNAME, Env:\SPRING_DATASOURCE_PASSWORD
+```
+
+Estas instrucciones permiten comprobar de forma independiente las pruebas automatizadas de Usuarios, Reservas, Profesionales, Contacto, Servicios y Farmacia
+
+### 10.3. Comprobaciones de API REST, autenticación y permisos
+
+Con la aplicación iniciada mediante Docker Compose se pueden ejecutar las comprobaciones HTTP de la sección 7 y la siguiente consulta pública de Farmacia
+
+```powershell
+curl.exe -i http://localhost:8086/api/productos
+```
+
+Para comprobar que una operación administrativa está protegida
+
+```powershell
+curl.exe -i http://localhost:8081/api/usuarios/admin/usuarios
+```
+
+Sin credenciales se espera `401 Unauthorized`. Con las credenciales académicas del administrador configuradas en la sección 5
+
+```powershell
+curl.exe -i -u "admin@sanmarcos.com:Admin123" http://localhost:8081/api/usuarios/admin/usuarios
+```
+
+Con una cuenta de administrador activa se espera `200 OK`. Un usuario autenticado sin el rol requerido debe obtener `403 Forbidden`. Los demás endpoints y sus JSON de solicitud se pueden comprobar mediante Swagger, usando las direcciones de la sección 6 y los permisos correspondientes
+
+### 10.4. Integración con frontend y comprobación de persistencia
+
+Iniciar el proyecto completo y comprobar sus contenedores
+
+```powershell
+docker compose --env-file .env.docker up -d --build
+docker compose --env-file .env.docker ps -a
+```
+
+Abrir `http://localhost:5173` y comprobar manualmente los flujos de registro, inicio de sesión, reservas, contacto, servicios, inventario y farmacia según el rol. Las solicitudes REST se pueden revisar mediante Swagger o las herramientas de red del navegador
+
+Para comprobar la persistencia, crear primero un registro de prueba, verificarlo desde la aplicación, detener los contenedores sin borrar el volumen y volver a iniciarlos
+
+```powershell
+docker compose --env-file .env.docker down
+docker compose --env-file .env.docker up -d
+docker compose --env-file .env.docker ps -a
+```
+
+Consultar nuevamente el mismo registro para verificar que se conservó en MySQL. No utilizar `down -v` durante esta prueba, ya que ese comando elimina el volumen de datos
+
+Las comprobaciones de integración, permisos y persistencia de este apartado son manuales; no corresponden a pruebas automatizadas adicionales de Vitest o JUnit
+
 ## 11. Repositorio
 
 **GitHub:** https://github.com/P4NXO14/Veterinaria-San-Marcos
