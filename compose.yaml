@@ -1,0 +1,142 @@
+name: veterinaria-san-marcos
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Configura MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: sanmarcos_usuarios
+      MYSQL_USER: sanmarcos
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD:?Configura MYSQL_APP_PASSWORD}
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - mysql_sanmarcos:/var/lib/mysql
+      - ./docker/mysql/01-crear-bases.sql:/docker-entrypoint-initdb.d/01-crear-bases.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u root --password=\"$$MYSQL_ROOT_PASSWORD\" -e 'SELECT 1' > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+  usuarios:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: usuarios
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanmarcos_usuarios
+      SPRING_DATASOURCE_USERNAME: sanmarcos
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD}
+      SANMARCOS_ADMIN_PASSWORD: ${SANMARCOS_ADMIN_PASSWORD:?Configura SANMARCOS_ADMIN_PASSWORD}
+      SANMARCOS_PERSONAL_PASSWORD: ${SANMARCOS_PERSONAL_PASSWORD:?Configura SANMARCOS_PERSONAL_PASSWORD}
+    ports:
+      - "127.0.0.1:8081:8081"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  reservas:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: reservas
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanmarcos_reservas
+      SPRING_DATASOURCE_USERNAME: sanmarcos
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD}
+      USUARIOS_URL: http://usuarios:8081
+      SANMARCOS_SERVICIOS_URL: http://servicios:8085
+      SANMARCOS_PROFESIONALES_URL: http://profesionales:8083
+    ports:
+      - "127.0.0.1:8082:8082"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  profesionales:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: profesionales
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanmarcos_profesionales
+      SPRING_DATASOURCE_USERNAME: sanmarcos
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD}
+    ports:
+      - "127.0.0.1:8083:8083"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  contacto:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: contacto
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanmarcos_contacto
+      SPRING_DATASOURCE_USERNAME: sanmarcos
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD}
+      USUARIOS_URL: http://usuarios:8081
+    ports:
+      - "127.0.0.1:8084:8084"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  servicios:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: servicios
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanmarcos_servicios
+      SPRING_DATASOURCE_USERNAME: sanmarcos
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD}
+      USUARIOS_URL: http://usuarios:8081
+    ports:
+      - "127.0.0.1:8085:8085"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  farmacia:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+      args:
+        SERVICE: farmacia
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/sanmarcos_farmacia
+      SPRING_DATASOURCE_USERNAME: sanmarcos
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_APP_PASSWORD}
+      USUARIOS_URL: http://usuarios:8081
+    ports:
+      - "127.0.0.1:8086:8086"
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:5173:5173"
+    depends_on:
+      - usuarios
+      - reservas
+      - profesionales
+      - contacto
+      - servicios
+      - farmacia
+
+volumes:
+  mysql_sanmarcos:
