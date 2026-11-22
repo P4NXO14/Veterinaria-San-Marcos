@@ -1,237 +1,410 @@
-# Veterinaria San Marcos — Evaluación Parcial 2
+# Veterinaria San Marcos - Evaluación Parcial 3
 
-El proyecto transforma el sitio original construido con HTML, CSS y JavaScript en una aplicación de una sola página (SPA) desarrollada con **React, TypeScript y Vite**, incorporando componentes reutilizables, navegación, formularios controlados, gestión de datos y pruebas automatizadas
+Aplicación web para la gestión de una clínica veterinaria mediante React, TypeScript, Spring Boot, MySQL y Docker Compose
 
-## Objetivo del proyecto
+## 1. Tecnologías utilizadas
 
-Digitalizar funciones de la Veterinaria San Marcos, ubicada en Rancagua, permitiendo consultar servicios, solicitar citas veterinarias, revisar productos de farmacia y gestionar tareas internas según el rol de cada usuario
+| Tecnología | Función |
+|---|---|
+| React, TypeScript y Vite | Desarrollo del frontend |
+| Java 17 y Spring Boot 4 | Desarrollo de microservicios |
+| Spring Security | Autenticación y permisos |
+| Spring Data JPA | Persistencia de datos |
+| MySQL 8 | Bases de datos |
+| Flyway | Migraciones SQL |
+| Swagger / OpenAPI | Documentación de API REST |
+| Docker Compose | Ejecución integrada |
+| Vitest y JUnit | Pruebas automatizadas |
 
-Esta entrega es un **prototipo funcional del frontend**, que utiliza datos simulados y almacenamiento local del navegador, sin backend ni base de datos remota
+## 2. Arquitectura
 
-## Tecnologías utilizadas
+El proyecto contiene seis microservicios independientes, un frontend React y un servidor MySQL
 
-| Tecnología | Uso en el proyecto |
-| --- | --- |
-| React | Construcción de la interfaz mediante componentes |
-| TypeScript | Tipado de propiedades, datos y funciones |
-| Vite | Entorno de desarrollo y compilación |
-| React Router | Navegación entre páginas y rutas con parámetros |
-| CSS Grid, Flexbox y media queries | Diseño responsivo |
-| Bootstrap | Estilos y utilidades complementarias |
-| LocalStorage y SessionStorage | Persistencia y selección temporal de datos simulados |
-| Vitest | Ejecución de pruebas automatizadas |
-| React Testing Library y jsdom | Pruebas de componentes e interacciones |
-| Git y GitHub | Control de versiones y trabajo mediante ramas |
+| Componente | Puerto | Función |
+|---|---|---|
+| Frontend | 5173 | Interfaz web |
+| Usuarios | 8081 | Cuentas, autenticación y roles |
+| Reservas | 8082 | Gestión de citas veterinarias |
+| Profesionales | 8083 | Veterinarios, técnicos y horarios |
+| Contacto | 8084 | Mensajes de clientes |
+| Servicios | 8085 | Catálogo y servicios destacados |
+| Farmacia | 8086 | Productos, inventario y pedidos |
+| MySQL | 3307 | Seis bases de datos |
 
-## Funcionalidades implementadas
+Los roles del sistema son cliente, recepcionista y administrador
 
-### Acceso público
+Cada microservicio utiliza su propia base de datos MySQL y sus tablas se administran mediante Flyway
 
-- Página de Inicio con información de la veterinaria y seis servicios destacados
-- Página Nosotros con información de la clínica y video informativo
-- Catálogo de **31 servicios veterinarios**, con búsqueda por nombre, código o especie y filtro por categoría
-- Fichas de detalle con información, duración, precio, especie e imagen
-- Catálogo de Farmacia con búsqueda, categorías, precios, descuentos y disponibilidad de productos
-- Registro de clientes e inicio de sesión
-
-Las páginas públicas pueden consultarse sin iniciar sesión, mientras que las operaciones que requieren identificación solicitan autenticación
-
-### Cliente
-
-- Solicitud de citas para servicios compatibles con la especie y el profesional
-- Selección de fecha y hora según la disponibilidad
-- Consulta del estado de sus propias citas
-- Visualización de horarios alternativos propuestos por Recepción
-- Envío de mensajes mediante el formulario de Contacto
-- Carrito de farmacia y simulación de compra con actualización de stock
-- Restricción de compra para productos que requieren receta veterinaria
-
-### Recepcionista
-
-- Visualización y gestión de solicitudes de citas
-- Confirmación, cancelación y propuesta de nuevos horarios
-- Consulta de mensajes enviados desde Contacto
-- Consulta y mantenimiento del inventario de farmacia
-
-### Administrador
-
-- Acceso al panel de gestión de usuarios
-- Creación, edición, activación, desactivación y eliminación de cuentas de personal, según las restricciones definidas
-- Acceso a Recepción y al inventario de farmacia
-- Restricciones de acceso a las operaciones exclusivas de clientes
-
-## Organización del proyecto
+## 3. Estructura del proyecto
 
 ```text
-Veterinaria-San-Marcos/
-├── README.md
-└── frontend/
-    ├── public/
-    │   ├── img/
-    │   └── video/
-    ├── src/
-    │   ├── componentes/
-    │   │   ├── atomos/
-    │   │   ├── moleculas/
-    │   │   └── organismos/
-    │   ├── datos/
-    │   ├── estilos/
-    │   ├── paginas/
-    │   ├── tests/
-    │   ├── App.tsx
-    │   ├── main.tsx
-    │   └── index.css
-    ├── package.json
-    ├── package-lock.json
-    ├── vite.config.ts
-    ├── vitest.config.ts
-    └── README.md
+Veterinaria-San-Marcos-evaluacion-3-microservicios/
+├── backend/
+│   ├── usuarios/
+│   ├── reservas/
+│   ├── profesionales/
+│   ├── contacto/
+│   ├── servicios/
+│   ├── farmacia/
+│   └── Dockerfile
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   └── Dockerfile
+├── docker/
+│   └── mysql/
+│       └── 01-crear-bases.sql
+├── compose.yaml
+├── docker.env.example
+├── .dockerignore
+├── .gitignore
+└── README.md
 ```
 
-### Atomic Design
+## 4. Instalación desde cero en otro computador
 
-La interfaz está organizada de acuerdo con **Atomic Design**, mediante tres niveles de composición
+Estas instrucciones permiten descargar el proyecto directamente desde GitHub y ejecutarlo mediante Docker
 
-- **Átomos:** elementos básicos como `Input`, `Logo` y `EnlaceNavegacion`
-- **Moléculas:** combinaciones reutilizables como `CampoFormulario` y `TarjetaServicio`
-- **Organismos:** conjuntos funcionales como `Encabezado`, `FormularioCita`, `SelectorHorario`, `ListadoCitas` y los formularios de usuarios
+No es necesario instalar Java, Maven, Node.js, Vite, MySQL ni Laragon en el computador
 
-Las vistas se encuentran en `src/paginas` y reutilizan estos componentes mediante propiedades tipadas
+### Paso 1 - Instalar los requisitos
 
-### Manejo de estado y datos
+Se necesita lo siguiente
 
-- Los componentes utilizan `useState` para actualizar formularios, filtros, listas y mensajes
-- La navegación se controla mediante React Router
-- Los módulos de `src/datos` concentran las operaciones sobre usuarios, citas, servicios, profesionales, horarios, productos y mensajes
-- Las operaciones CRUD se reflejan en la interfaz mediante actualizaciones de estado
-- `LocalStorage` conserva datos simulados como usuarios, citas, mensajes e inventario
-- `SessionStorage` se utiliza para conservar temporalmente el servicio seleccionado al iniciar una reserva
+- Docker Desktop instalado y funcionando
+- Git para descargar el repositorio o descargar el ZIP desde GitHub
+- WSL2 y virtualización habilitados cuando Windows lo requiera
+- Conexión a Internet durante la primera construcción
 
-## Requisitos para ejecutar
+Enlaces de descarga
 
-En otro computador se necesitan las siguientes herramientas
+- Docker: https://www.docker.com/products/docker-desktop/
+- Git: https://git-scm.com/downloads
 
-| Herramienta | Requisito | Descarga |
-| --- | --- | --- |
-| Node.js | Obligatorio, versión compatible con Vite; se recomienda una versión LTS actual | https://nodejs.org/ |
-| npm | Obligatorio, se incluye al instalar Node.js | Incluido con Node.js |
-| Git | Necesario para clonar el repositorio desde GitHub | https://git-scm.com/ |
-| Navegador web | Necesario para visualizar la aplicación | Chrome, Edge, Firefox u otro navegador moderno |
-| Visual Studio Code | Opcional, para revisar o modificar el código | https://code.visualstudio.com/ |
+Abrir Docker Desktop antes de comenzar
 
-Para comprobar que Node.js, npm y Git están instalados, abrir PowerShell o una terminal y ejecutar
+En PowerShell comprobar
 
-```bash
-node --version
-npm --version
-git --version
+```powershell
+docker --version
+docker compose version
+docker info
 ```
 
-**No es necesario instalar React, TypeScript, Bootstrap, Vitest o React Router por separado**, ya que se incluyen en las dependencias del proyecto y se instalan mediante npm
+### Paso 2 - Descargar el proyecto
 
-Tampoco se requiere instalar Java, Spring Boot, MySQL o Docker para ejecutar esta versión del frontend
+Abrir PowerShell y ejecutar
 
-## Instalación y ejecución
-
-### 1. Clonar el repositorio
-
-```bash
-git clone -b evaluacion-2-react https://github.com/P4NXO14/Veterinaria-San-Marcos.git
+```powershell
+cd "$HOME\Downloads"
 ```
 
-### 2. Entrar a la carpeta del frontend
+Descargar directamente la rama de Evaluación 3
 
-```bash
-cd Veterinaria-San-Marcos/frontend
+```powershell
+git clone --branch evaluacion-3-microservicios --single-branch https://github.com/P4NXO14/Veterinaria-San-Marcos.git Veterinaria-San-Marcos-evaluacion-3-microservicios
 ```
 
-### 3. Instalar las dependencias
+Entrar a la carpeta descargada
 
-```bash
-npm install
+```powershell
+cd Veterinaria-San-Marcos-evaluacion-3-microservicios
 ```
 
-Este comando instala las dependencias definidas en `package.json`, por lo que no se debe copiar la carpeta `node_modules` desde otro computador
+**Importante:** no clonar el repositorio dentro de otra copia del proyecto
 
-### 4. Iniciar el servidor de desarrollo
+Si se utiliza Download ZIP desde GitHub, extraerlo en una carpeta independiente y abrir PowerShell donde se encuentre `compose.yaml`
 
-```bash
-npm run dev
+### Paso 3 - Crear la configuración de Docker
+
+Desde la carpeta principal ejecutar
+
+```powershell
+Copy-Item .\docker.env.example .\.env.docker
 ```
 
-Abrir en el navegador la dirección indicada por Vite, normalmente `http://localhost:5173/`
+Este comando crea el archivo `.env.docker` con las variables necesarias para MySQL y las cuentas de demostración
 
-Para detener el servidor, presionar `Ctrl + C` en la terminal
+El archivo `docker.env.example` incluye las credenciales académicas utilizadas durante el desarrollo
 
-## Comandos disponibles
+Las contraseñas deben configurarse antes de inicializar MySQL por primera vez
 
-Los siguientes comandos se ejecutan dentro de la carpeta `frontend`
+El archivo `.env.docker` está excluido de Git mediante `.gitignore`
 
-| Comando | Función |
-| --- | --- |
-| `npm run dev` | Iniciar el servidor de desarrollo |
-| `npm run build` | Verificar TypeScript y generar la compilación de producción |
-| `npm run preview` | Previsualizar la compilación generada |
-| `npm run lint` | Ejecutar ESLint |
-| `npm run test` | Ejecutar Vitest en modo interactivo |
-| `npm run test:run` | Ejecutar la suite de pruebas una sola vez |
-| `npm run test:coverage` | Ejecutar las pruebas y generar la cobertura |
+### Paso 4 - Verificar el archivo SQL
 
-## Pruebas automatizadas
+Comprobar que exista el archivo encargado de crear las seis bases de datos
 
-Se utiliza **Vitest + React Testing Library + jsdom** para comprobar el comportamiento de los componentes y de los módulos de datos
-
-Las pruebas se ubican en `frontend/src/tests` y contemplan, entre otros aspectos
-
-- Renderizado de componentes y contenido de las páginas
-- Navegación, sesiones y permisos por rol
-- Validación de RUN, correo, contraseñas y campos obligatorios
-- Registro e inicio de sesión
-- Creación, consulta, actualización y eliminación de usuarios y productos
-- Búsqueda y filtros de servicios y farmacia
-- Solicitudes de citas, disponibilidad horaria, cambios de estado y propuestas de horario
-- Manejo de mensajes de Contacto
-- Interacciones del carrito y compras simuladas
-- Casos límite, estados vacíos y manejo de errores
-
-Para ejecutar todas las pruebas
-
-```bash
-npm run test:run
+```powershell
+Test-Path .\docker\mysql\01-crear-bases.sql
 ```
 
-Para generar el reporte de cobertura
+El resultado esperado es
 
-```bash
-npm run test:coverage
+```text
+True
 ```
 
-El resultado aparece en la terminal y el reporte HTML puede abrirse en `frontend/coverage/index.html`
+Comprobar que el archivo no esté vacío
 
-## Diseño responsivo
+```powershell
+(Get-Item .\docker\mysql\01-crear-bases.sql).Length
+```
 
-La interfaz conserva la organización mediante CSS Grid, Flexbox y media queries, complementada con utilidades de Bootstrap
+El resultado debe ser mayor que cero
 
-El diseño contempla navegación, tarjetas, formularios y tablas adaptables a teléfonos móviles, tabletas y computadores
+### Paso 5 - Validar Docker Compose
 
-## Ramas y control de versiones
+```powershell
+docker compose --env-file .env.docker config --quiet
+```
 
-- `main`: versión original del proyecto de la primera evaluación
-- `evaluacion-2-react`: versión migrada a React, TypeScript y Vite para la segunda evaluación
+Si no aparecen errores continuar con la instalación
 
-Los cambios del frontend se desarrollan y registran en la rama `evaluacion-2-react`, manteniendo separada la versión inicial
+### Paso 6 - Construir e iniciar la aplicación
 
-## Alcance y limitaciones
+En la primera ejecución utilizar
 
-- **Datos simulados:** se almacenan en el navegador y no se comparten entre dispositivos
-- **Autenticación de demostración:** el control de sesión y roles es del frontend, no sustituye la autenticación segura de un backend
-- **Compras de farmacia:** no se realizan pagos reales
-- **Citas:** se gestionan en el entorno de demostración, sin integración con un calendario externo
-- **Backend y base de datos remota:** no forman parte de esta implementación del frontend
-- **Cobertura:** pueden permanecer condiciones poco frecuentes sin ejecutar, identificables en el reporte de Vitest
+```powershell
+docker compose --env-file .env.docker up -d --build
+```
 
-Las cuentas precargadas por el sistema se destinan exclusivamente a la demostración académica y no deben utilizarse como mecanismo de autenticación en producción
+Docker realizará automáticamente las siguientes operaciones
 
-## Autor
+- Descargar las imágenes necesarias
+- Construir los seis microservicios Spring Boot
+- Preparar el frontend React
+- Crear e iniciar MySQL
+- Crear las seis bases de datos
+- Asignar los permisos correspondientes
+- Ejecutar las migraciones Flyway
+- Iniciar los ocho contenedores
 
-**Francisco Osorio**
+La primera construcción puede tardar varios minutos dependiendo del computador y la conexión a Internet
+
+### Paso 7 - Comprobar los contenedores
+
+```powershell
+docker compose --env-file .env.docker ps -a
+```
+
+Deben aparecer los siguientes servicios
+
+- mysql
+- usuarios
+- reservas
+- profesionales
+- contacto
+- servicios
+- farmacia
+- frontend
+
+Todos deben permanecer en estado `Up`
+
+MySQL debe aparecer como `Healthy`
+
+Los microservicios Spring Boot pueden necesitar unos segundos adicionales para completar su inicialización
+
+### Paso 8 - Abrir la aplicación
+
+Ingresar en el navegador
+
+http://localhost:5173
+
+No es necesario ejecutar `npm run dev` ni iniciar manualmente los microservicios
+
+## 5. Cuentas de demostración
+
+| Rol | Correo | Contraseña |
+|---|---|---|
+| Administrador | admin@sanmarcos.com | Admin123 |
+| Recepcionista | personal@sanmarcos.com | Pers1234 |
+
+Estas credenciales corresponden a la configuración académica de demostración
+
+Las cuentas se generan automáticamente cuando MySQL se inicializa por primera vez
+
+Los clientes pueden registrarse directamente desde la aplicación
+
+Las contraseñas de demostración no deben utilizarse en producción
+
+## 6. Swagger / OpenAPI
+
+Los seis microservicios incorporan Springdoc OpenAPI para documentar sus operaciones REST mediante Swagger UI
+
+### Direcciones de Swagger
+
+| Microservicio | Swagger UI |
+|---|---|
+| Usuarios | http://localhost:8081/swagger-ui/index.html |
+| Reservas | http://localhost:8082/swagger-ui/index.html |
+| Profesionales | http://localhost:8083/swagger-ui/index.html |
+| Contacto | http://localhost:8084/swagger-ui/index.html |
+| Servicios | http://localhost:8085/swagger-ui/index.html |
+| Farmacia | http://localhost:8086/swagger-ui/index.html |
+
+Cada microservicio también permite consultar su documentación OpenAPI en formato JSON mediante
+
+```text
+http://localhost:PUERTO/v3/api-docs
+```
+
+Reemplazar `PUERTO` por el puerto correspondiente al microservicio
+
+### Cómo utilizar Swagger
+
+1. Abrir Swagger desde el navegador
+2. Seleccionar el endpoint que se desea probar
+3. Presionar `Try it out`
+4. Completar los parámetros o el JSON solicitado
+5. Presionar `Execute`
+6. Revisar `Response code` y `Response body`
+
+### Métodos HTTP utilizados
+
+| Método | Función |
+|---|---|
+| GET | Consultar información |
+| POST | Crear registros o ejecutar operaciones |
+| PUT | Actualizar información |
+| PATCH | Modificar parcialmente un registro |
+| DELETE | Eliminar registros |
+
+Las operaciones protegidas mantienen los permisos definidos mediante Spring Security
+
+Algunos endpoints requieren autenticación HTTP Basic
+
+Las respuestas HTTP 401 o 403 pueden ser esperadas cuando no se proporcionan credenciales válidas o el usuario no dispone de los permisos necesarios
+
+## 7. Comprobación rápida de las API
+
+Con Docker funcionando ejecutar los siguientes comandos desde PowerShell
+
+### Reservas
+
+```powershell
+curl.exe -i http://localhost:8082/api/citas/ocupaciones
+```
+
+### Profesionales
+
+```powershell
+curl.exe -i http://localhost:8083/api/profesionales
+```
+
+### Servicios destacados
+
+```powershell
+curl.exe -i http://localhost:8085/api/servicios/destacados
+```
+
+Los tres endpoints deben responder con HTTP 200
+
+Si Reservas devuelve `[]`, significa que todavía no existen ocupaciones registradas
+
+## 8. Comandos Docker
+
+Ejecutar siempre desde la carpeta principal del proyecto
+
+### Iniciar el proyecto
+
+```powershell
+docker compose --env-file .env.docker up -d
+```
+
+### Comprobar los contenedores
+
+```powershell
+docker compose --env-file .env.docker ps -a
+```
+
+### Consultar los registros
+
+```powershell
+docker compose --env-file .env.docker logs --tail=50
+```
+
+### Detener sin perder datos
+
+```powershell
+docker compose --env-file .env.docker down
+```
+
+### Reconstruir después de modificar código
+
+```powershell
+docker compose --env-file .env.docker up -d --build
+```
+
+### Reiniciar completamente las bases de datos
+
+**Advertencia:** el siguiente comando elimina todos los registros almacenados en el volumen MySQL de este proyecto
+
+```powershell
+docker compose --env-file .env.docker down -v
+```
+
+Para volver a inicializar desde cero
+
+```powershell
+docker compose --env-file .env.docker up -d
+```
+
+No utilizar `down -v` para reinicios normales
+
+## 9. Errores frecuentes
+
+| Error | Posible causa |
+|---|---|
+| Port is already allocated | Otro programa o contenedor utiliza el puerto |
+| MySQL unhealthy | Problema de inicialización o credenciales |
+| MySQL 1044 | Faltan permisos sobre alguna base de datos |
+| MySQL 1045 | Contraseña incorrecta |
+| Empty reply from server | Spring Boot todavía está iniciando o se detuvo |
+| HTTP 401 | Falta autenticación |
+| HTTP 403 | El usuario no tiene permisos |
+| HTTP 404 | Dirección o recurso inexistente |
+| Vite no reconocido | Faltan dependencias locales y debe utilizarse Docker |
+
+Para revisar MySQL
+
+```powershell
+docker compose --env-file .env.docker logs --tail=50 mysql
+```
+
+Para revisar un microservicio específico
+
+```powershell
+docker compose --env-file .env.docker logs --tail=50 reservas
+```
+
+No eliminar los volúmenes sin comprobar si contienen información importante
+
+## 10. Pruebas realizadas
+
+Durante el desarrollo se realizaron las siguientes comprobaciones
+
+- Compilación del frontend React
+- 21 pruebas automatizadas del frontend aprobadas
+- Pruebas de los seis microservicios
+- Autenticación y permisos según rol
+- Gestión de reservas veterinarias
+- Consulta de profesionales
+- Gestión de mensajes de contacto
+- Catálogo de servicios
+- Inventario y pedidos de farmacia
+- Consultas HTTP de las API REST
+- Migraciones Flyway
+- Persistencia de datos en MySQL
+- Inicialización de la aplicación mediante Docker Compose
+- Integración de Swagger/OpenAPI en los seis microservicios
+
+Las compras de farmacia son simuladas y no procesan pagos reales
+
+## 11. Repositorio
+
+**GitHub:** https://github.com/P4NXO14/Veterinaria-San-Marcos
+
+**Rama:** `evaluacion-3-microservicios`
+
+**Autor:** Francisco Osorio
